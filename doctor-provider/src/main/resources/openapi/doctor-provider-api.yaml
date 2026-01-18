@@ -1,0 +1,404 @@
+openapi: 3.0.3
+info:
+  title: Doctor Provider API
+  description: API für die Verwaltung von Ärzten und deren Verfügbarkeiten
+  version: 1.0.0
+  contact:
+    name: Doctor Provider Team
+
+servers:
+  - url: http://localhost:8080
+    description: Development Server
+
+tags:
+  - name: doctors
+    description: Operationen für Ärzte
+  - name: appointments
+    description: Operationen für Termine
+
+paths:
+  /api/v1/doctors:
+    get:
+      tags:
+        - doctors
+      summary: Alle Ärzte abrufen
+      description: Gibt eine Liste aller registrierten Ärzte zurück
+      operationId: getAllDoctors
+      parameters:
+        - name: specialty
+          in: query
+          description: Filter nach Fachrichtung
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: Seitennummer (0-basiert)
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: Anzahl der Elemente pro Seite
+          required: false
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Erfolgreich
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DoctorDto'
+        '400':
+          description: Ungültige Anfrage
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+        - doctors
+      summary: Neuen Arzt anlegen
+      description: Erstellt einen neuen Arzt im System
+      operationId: createDoctor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDoctorRequest'
+      responses:
+        '201':
+          description: Arzt erfolgreich erstellt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DoctorDto'
+        '400':
+          description: Ungültige Eingabedaten
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/doctors/{doctorId}:
+    get:
+      tags:
+        - doctors
+      summary: Arzt nach ID abrufen
+      description: Gibt die Details eines bestimmten Arztes zurück
+      operationId: getDoctorById
+      parameters:
+        - name: doctorId
+          in: path
+          description: ID des Arztes
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Erfolgreich
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DoctorDto'
+        '404':
+          description: Arzt nicht gefunden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      tags:
+        - doctors
+      summary: Arzt aktualisieren
+      description: Aktualisiert die Daten eines bestehenden Arztes
+      operationId: updateDoctor
+      parameters:
+        - name: doctorId
+          in: path
+          description: ID des Arztes
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDoctorRequest'
+      responses:
+        '200':
+          description: Arzt erfolgreich aktualisiert
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DoctorDto'
+        '404':
+          description: Arzt nicht gefunden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      tags:
+        - doctors
+      summary: Arzt löschen
+      description: Löscht einen Arzt aus dem System
+      operationId: deleteDoctor
+      parameters:
+        - name: doctorId
+          in: path
+          description: ID des Arztes
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Arzt erfolgreich gelöscht
+        '404':
+          description: Arzt nicht gefunden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/doctors/{doctorId}/appointments:
+    get:
+      tags:
+        - appointments
+      summary: Verfügbare Termine eines Arztes abrufen
+      description: Gibt alle verfügbaren Termine eines Arztes zurück
+      operationId: getAvailableAppointments
+      parameters:
+        - name: doctorId
+          in: path
+          description: ID des Arztes
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: from
+          in: query
+          description: Startdatum (ISO 8601)
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          description: Enddatum (ISO 8601)
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Erfolgreich
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AppointmentSlotDto'
+        '404':
+          description: Arzt nicht gefunden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    DoctorDto:
+      type: object
+      required:
+        - id
+        - firstName
+        - lastName
+        - specialty
+        - email
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Eindeutige ID des Arztes
+        firstName:
+          type: string
+          description: Vorname des Arztes
+          example: Hans
+        lastName:
+          type: string
+          description: Nachname des Arztes
+          example: Müller
+        specialty:
+          type: string
+          description: Fachrichtung des Arztes
+          example: Allgemeinmedizin
+        email:
+          type: string
+          format: email
+          description: E-Mail-Adresse
+          example: hans.mueller@example.com
+        phone:
+          type: string
+          description: Telefonnummer
+          example: +49 123 456789
+        address:
+          $ref: '#/components/schemas/AddressDto'
+        createdAt:
+          type: string
+          format: date-time
+          description: Erstellungszeitpunkt
+        updatedAt:
+          type: string
+          format: date-time
+          description: Letzter Aktualisierungszeitpunkt
+
+    CreateDoctorRequest:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - specialty
+        - email
+      properties:
+        firstName:
+          type: string
+          minLength: 2
+          maxLength: 100
+          description: Vorname des Arztes
+        lastName:
+          type: string
+          minLength: 2
+          maxLength: 100
+          description: Nachname des Arztes
+        specialty:
+          type: string
+          minLength: 2
+          maxLength: 100
+          description: Fachrichtung des Arztes
+        email:
+          type: string
+          format: email
+          description: E-Mail-Adresse
+        phone:
+          type: string
+          description: Telefonnummer
+        address:
+          $ref: '#/components/schemas/AddressDto'
+
+    UpdateDoctorRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+          minLength: 2
+          maxLength: 100
+          description: Vorname des Arztes
+        lastName:
+          type: string
+          minLength: 2
+          maxLength: 100
+          description: Nachname des Arztes
+        specialty:
+          type: string
+          minLength: 2
+          maxLength: 100
+          description: Fachrichtung des Arztes
+        email:
+          type: string
+          format: email
+          description: E-Mail-Adresse
+        phone:
+          type: string
+          description: Telefonnummer
+        address:
+          $ref: '#/components/schemas/AddressDto'
+
+    AddressDto:
+      type: object
+      properties:
+        street:
+          type: string
+          description: Straße und Hausnummer
+          example: Musterstraße 123
+        city:
+          type: string
+          description: Stadt
+          example: München
+        postalCode:
+          type: string
+          description: Postleitzahl
+          example: "80331"
+        country:
+          type: string
+          description: Land
+          example: Deutschland
+
+    AppointmentSlotDto:
+      type: object
+      required:
+        - id
+        - doctorId
+        - startTime
+        - endTime
+        - available
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Eindeutige ID des Termins
+        doctorId:
+          type: string
+          format: uuid
+          description: ID des Arztes
+        startTime:
+          type: string
+          format: date-time
+          description: Startzeit des Termins
+        endTime:
+          type: string
+          format: date-time
+          description: Endzeit des Termins
+        available:
+          type: boolean
+          description: Ob der Termin verfügbar ist
+        duration:
+          type: integer
+          description: Dauer in Minuten
+          example: 30
+
+    ErrorResponse:
+      type: object
+      required:
+        - timestamp
+        - status
+        - error
+        - message
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Zeitpunkt des Fehlers
+        status:
+          type: integer
+          description: HTTP Status Code
+        error:
+          type: string
+          description: Fehlertyp
+        message:
+          type: string
+          description: Fehlermeldung
+        path:
+          type: string
+          description: Anfrage-Pfad
+
