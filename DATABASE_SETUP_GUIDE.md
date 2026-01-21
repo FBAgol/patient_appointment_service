@@ -196,7 +196,7 @@ doctor-provider/
     └── db/
         └── migration/         ← HIER! Im Service selbst
             ├── V1__Create_practice_table.sql
-            ├── V2__Create_doctor_table.sql
+            ├── V4__Create_doctor_table.sql
             └── ...
 
 patient-customer/
@@ -223,7 +223,7 @@ V<VERSION>__<DESCRIPTION>.sql
 
 Beispiele:
 V1__Create_practice_table.sql
-V2__Create_doctor_table.sql
+V4__Create_doctor_table.sql
 V3__Create_speciality_table.sql
 ```
 
@@ -262,7 +262,7 @@ CREATE INDEX idx_practice_name ON practice(name);
 
 ---
 
-#### **Beispiel: V2__Create_doctor_table.sql**
+#### **Beispiel: V4__Create_doctor_table.sql**
 
 ```sql
 -- =============================================
@@ -325,7 +325,7 @@ CREATE INDEX idx_speciality_type ON speciality(speciality_type);
 
 ---
 
-#### **Beispiel: V4__Create_doctor_speciality_table.sql**
+#### **Beispiel: V5__Create_doctor_speciality_table.sql**
 
 ```sql
 -- =============================================
