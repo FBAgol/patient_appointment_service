@@ -13,7 +13,7 @@ public class Practice {
     private String name;
     private String street;
     private String houseNumber;
-    private String phoneNumber;
+    private String phone;
     private String email;
     private UUID cityId; // ← NUR die ID! Beziehung zu City (FK in practice-Tabelle)
 }

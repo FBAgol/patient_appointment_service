@@ -1,6 +1,6 @@
 package test.doctor_provider.domain.model;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,7 +19,7 @@ import test.doctor_provider.domain.enums.SlotStatus;
 public class Slot {
     private UUID id;
     private UUID doctorId;              // ← NUR die ID! Nicht das ganze Doctor-Objekt
-    private LocalDateTime startTime;    // z.B. 2026-01-20 10:00
-    private LocalDateTime endTime;      // z.B. 2026-01-20 10:30
+    private ZonedDateTime startTime;    // z.B. 2026-01-20T10:00+01:00[Europe/Berlin]
+    private ZonedDateTime endTime;      // z.B. 2026-01-20T10:30+01:00[Europe/Berlin]
     private SlotStatus status;          // AVAILABLE, BOOKED, BLOCKED
 }

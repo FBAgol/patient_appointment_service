@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DdlMappings">
+    <mapping uuid="277a701a-f886-4be8-9c68-44424199498a" name="doctor_provider_db@localhost Mapping">
+      <data-sources db="fad063d8-8f28-4337-abdf-de75644de760" ddl="1ce62808-23ce-4fa0-b95f-b1b63d64e135" />
+    </mapping>
+  </component>
+  <component name="SqlDataSourceStorage">
+    <option name="dataSources">
+      <list>
+        <State>
+          <option name="id" value="1ce62808-23ce-4fa0-b95f-b1b63d64e135" />
+          <option name="name" value="doctor_provider_db@localhost (DDL)" />
+          <option name="dbmsName" value="POSTGRES" />
+          <option name="urls">
+            <array>
+              <option value="file://$PROJECT_DIR$/doctor-provider/src/main/resources/db/migration" />
+            </array>
+          </option>
+          <option name="outLayout" value="File per object by schema.groovy" />
+        </State>
+      </list>
+    </option>
+  </component>
+</project>
