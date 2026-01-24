@@ -1,7 +1,12 @@
 openapi: 3.0.3
 info:
   title: Doctor Provider API
-  description: API für die Verwaltung von Ärzten und deren Verfügbarkeiten
+  description: |
+    API für die Verwaltung von Ärzten, Praxen, Stammdaten und Slot-Verfügbarkeit.
+
+    Hinweis (Spec-First + hexagonale Architektur):
+    - Diese OpenAPI beschreibt ausschließlich den HTTP-Adapter (Inbound Port) und dessen Contract.
+    - Business-Logik liegt in Use-Cases/Domain und wird hier nur über Request/Response/Errors dokumentiert.
   version: 1.0.0
   contact:
     name: Doctor Provider Team
@@ -11,12 +16,164 @@ servers:
     description: Development Server
 
 tags:
+  - name: cities
+    description: Stammdaten – Städte
+  - name: specialities
+    description: Stammdaten – Fachrichtungen
+  - name: practices
+    description: Praxen
   - name: doctors
     description: Operationen für Ärzte
-  - name: appointments
-    description: Operationen für Termine
+  - name: working-hours
+    description: Arbeitszeiten von Ärzten
+  - name: slots
+    description: Slot Operations (Verfügbarkeit/Buchung/Blockieren)
 
 paths:
+  # ============================
+  # Cities
+  # ============================
+  /api/v1/cities:
+    get:
+      tags: [cities]
+      summary: Alle Städte abrufen
+      description: Gibt eine Liste aller Städte zurück.
+      operationId: getAllCities
+      responses:
+        '200':
+          description: Erfolgreich
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CityDto'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ============================
+  # Specialities
+  # ============================
+  /api/v1/specialities:
+    get:
+      tags: [specialities]
+      summary: Alle Fachrichtungen abrufen
+      description: Gibt eine Liste aller Fachrichtungen zurück.
+      operationId: getAllSpecialities
+      responses:
+        '200':
+          description: Erfolgreich
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SpecialityDto'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ============================
+  # Practices (CRUD)
+  # ============================
+  /api/v1/practices:
+    get:
+      tags: [practices]
+      summary: Praxen abrufen
+      description: Gibt eine paged Liste von Praxen zurück.
+      operationId: getAllPractices
+      parameters:
+        - $ref: '#/components/parameters/CityIdQuery'
+        - $ref: '#/components/parameters/PageQuery'
+        - $ref: '#/components/parameters/SizeQuery'
+      responses:
+        '200':
+          $ref: '#/components/responses/PracticePageOk'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags: [practices]
+      summary: Neue Praxis anlegen
+      description: Erstellt eine neue Praxis.
+      operationId: createPractice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePracticeRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/PracticeCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/practices/{id}:
+    get:
+      tags: [practices]
+      summary: Praxis nach ID abrufen
+      operationId: getPracticeById
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/PracticeOk'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags: [practices]
+      summary: Praxis aktualisieren
+      operationId: updatePractice
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePracticeRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/PracticeOk'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags: [practices]
+      summary: Praxis löschen
+      operationId: deletePractice
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '204':
+          description: Praxis erfolgreich gelöscht
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ============================
+  # Doctors (CRUD) - bisherige Endpoints bleiben
+  # ============================
   /api/v1/doctors:
     get:
       tags:
@@ -31,35 +188,20 @@ paths:
           required: false
           schema:
             type: string
-        - name: page
-          in: query
-          description: Seitennummer (0-basiert)
-          required: false
-          schema:
-            type: integer
-            default: 0
-        - name: size
-          in: query
-          description: Anzahl der Elemente pro Seite
-          required: false
-          schema:
-            type: integer
-            default: 20
+        - $ref: '#/components/parameters/PageQuery'
+        - $ref: '#/components/parameters/SizeQuery'
       responses:
         '200':
           description: Erfolgreich
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/DoctorDto'
+                $ref: '#/components/schemas/DoctorPageResponse'
         '400':
-          description: Ungültige Anfrage
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
     post:
       tags:
         - doctors
@@ -80,11 +222,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/DoctorDto'
         '400':
-          description: Ungültige Eingabedaten
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /api/v1/doctors/{doctorId}:
     get:
@@ -94,13 +236,7 @@ paths:
       description: Gibt die Details eines bestimmten Arztes zurück
       operationId: getDoctorById
       parameters:
-        - name: doctorId
-          in: path
-          description: ID des Arztes
-          required: true
-          schema:
-            type: string
-            format: uuid
+        - $ref: '#/components/parameters/DoctorIdPath'
       responses:
         '200':
           description: Erfolgreich
@@ -108,12 +244,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DoctorDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Arzt nicht gefunden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
     put:
       tags:
         - doctors
@@ -121,13 +258,7 @@ paths:
       description: Aktualisiert die Daten eines bestehenden Arztes
       operationId: updateDoctor
       parameters:
-        - name: doctorId
-          in: path
-          description: ID des Arztes
-          required: true
-          schema:
-            type: string
-            format: uuid
+        - $ref: '#/components/parameters/DoctorIdPath'
       requestBody:
         required: true
         content:
@@ -141,12 +272,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DoctorDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Arzt nicht gefunden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
     delete:
       tags:
         - doctors
@@ -154,52 +288,285 @@ paths:
       description: Löscht einen Arzt aus dem System
       operationId: deleteDoctor
       parameters:
-        - name: doctorId
-          in: path
-          description: ID des Arztes
-          required: true
-          schema:
-            type: string
-            format: uuid
+        - $ref: '#/components/parameters/DoctorIdPath'
       responses:
         '204':
           description: Arzt erfolgreich gelöscht
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Arzt nicht gefunden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
+  /api/v1/doctors/{doctorId}/specialities/{specialityId}:
+    post:
+      tags: [doctors]
+      summary: Fachrichtung einem Arzt zuordnen
+      operationId: assignSpecialityToDoctor
+      parameters:
+        - $ref: '#/components/parameters/DoctorIdPath'
+        - $ref: '#/components/parameters/SpecialityIdPath'
+      responses:
+        '204':
+          description: Zuordnung erfolgreich erstellt
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags: [doctors]
+      summary: Fachrichtung von einem Arzt entfernen
+      operationId: removeSpecialityFromDoctor
+      parameters:
+        - $ref: '#/components/parameters/DoctorIdPath'
+        - $ref: '#/components/parameters/SpecialityIdPath'
+      responses:
+        '204':
+          description: Zuordnung erfolgreich entfernt
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ============================
+  # Working Hours
+  # ============================
+  /api/v1/doctors/{doctorId}/working-hours:
+    post:
+      tags: [working-hours]
+      summary: Working Hours anlegen
+      operationId: createWorkingHours
+      parameters:
+        - $ref: '#/components/parameters/DoctorIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWorkingHoursRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/WorkingHoursCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    get:
+      tags: [working-hours]
+      summary: Working Hours eines Arztes abrufen
+      operationId: getWorkingHoursForDoctor
+      parameters:
+        - $ref: '#/components/parameters/DoctorIdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/WorkingHoursListOk'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/working-hours/{id}:
+    put:
+      tags: [working-hours]
+      summary: Working Hours aktualisieren
+      operationId: updateWorkingHours
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWorkingHoursRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/WorkingHoursOk'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags: [working-hours]
+      summary: Working Hours löschen
+      operationId: deleteWorkingHours
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '204':
+          description: Working Hours erfolgreich gelöscht
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ============================
+  # Slots
+  # ============================
+  /api/v1/doctors/{doctorId}/slots/generate:
+    post:
+      tags: [slots]
+      summary: Slots aus Working Hours generieren
+      operationId: generateSlots
+      parameters:
+        - $ref: '#/components/parameters/DoctorIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateSlotsRequest'
+      responses:
+        '200':
+          description: Slots erfolgreich generiert
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/slots:
+    get:
+      tags: [slots]
+      summary: Slots suchen
+      description: Suche/Filter nach Datum, Arzt, Fachrichtung, Stadt.
+      operationId: searchSlots
+      parameters:
+        - $ref: '#/components/parameters/DoctorIdQuery'
+        - $ref: '#/components/parameters/SpecialityIdQuery'
+        - $ref: '#/components/parameters/CityIdQuery'
+        - $ref: '#/components/parameters/DateQuery'
+        - $ref: '#/components/parameters/PageQuery'
+        - $ref: '#/components/parameters/SizeQuery'
+      responses:
+        '200':
+          $ref: '#/components/responses/SlotPageOk'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/slots/{id}:
+    get:
+      tags: [slots]
+      summary: Slot nach ID abrufen
+      operationId: getSlotById
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/SlotOk'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/slots/{id}/block:
+    put:
+      tags: [slots]
+      summary: Slot blockieren
+      operationId: blockSlot
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/SlotOk'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/slots/{id}/unblock:
+    put:
+      tags: [slots]
+      summary: Slot freigeben
+      operationId: unblockSlot
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          $ref: '#/components/responses/SlotOk'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/slots/{id}/book:
+    post:
+      tags: [slots]
+      summary: Slot buchen
+      description: Wird später vom Patient-Customer Service genutzt.
+      operationId: bookSlot
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookSlotRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SlotOk'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ============================
+  # Backward compatible alias (optional): appointments
+  # ============================
   /api/v1/doctors/{doctorId}/appointments:
     get:
       tags:
         - appointments
       summary: Verfügbare Termine eines Arztes abrufen
-      description: Gibt alle verfügbaren Termine eines Arztes zurück
+      description: |
+        Alias für Slot-Verfügbarkeit.
+        Gibt alle verfügbaren Termine (Slots) eines Arztes zurück.
       operationId: getAvailableAppointments
       parameters:
-        - name: doctorId
-          in: path
-          description: ID des Arztes
-          required: true
-          schema:
-            type: string
-            format: uuid
-        - name: from
-          in: query
-          description: Startdatum (ISO 8601)
-          required: false
-          schema:
-            type: string
-            format: date-time
-        - name: to
-          in: query
-          description: Enddatum (ISO 8601)
-          required: false
-          schema:
-            type: string
-            format: date-time
+        - $ref: '#/components/parameters/DoctorIdPath'
+        - $ref: '#/components/parameters/FromQuery'
+        - $ref: '#/components/parameters/ToQuery'
       responses:
         '200':
           description: Erfolgreich
@@ -209,23 +576,469 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/AppointmentSlotDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '404':
-          description: Arzt nicht gefunden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
 components:
+  parameters:
+    DoctorIdPath:
+      name: doctorId
+      in: path
+      description: ID des Arztes
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    SpecialityIdPath:
+      name: specialityId
+      in: path
+      description: ID der Fachrichtung
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    IdPath:
+      name: id
+      in: path
+      description: Ressourcen-ID
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    PageQuery:
+      name: page
+      in: query
+      description: Seitennummer (0-basiert)
+      required: false
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+
+    SizeQuery:
+      name: size
+      in: query
+      description: Anzahl der Elemente pro Seite
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 200
+        default: 20
+
+    FromQuery:
+      name: from
+      in: query
+      description: Startdatum (ISO 8601)
+      required: false
+      schema:
+        type: string
+        format: date-time
+
+    ToQuery:
+      name: to
+      in: query
+      description: Enddatum (ISO 8601)
+      required: false
+      schema:
+        type: string
+        format: date-time
+
+    DateQuery:
+      name: date
+      in: query
+      description: Datum (YYYY-MM-DD)
+      required: false
+      schema:
+        type: string
+        format: date
+
+    CityIdQuery:
+      name: cityId
+      in: query
+      description: Filter nach Stadt-ID
+      required: false
+      schema:
+        type: string
+        format: uuid
+
+    SpecialityIdQuery:
+      name: specialityId
+      in: query
+      description: Filter nach Fachrichtung-ID
+      required: false
+      schema:
+        type: string
+        format: uuid
+
+    DoctorIdQuery:
+      name: doctorId
+      in: query
+      description: Filter nach Arzt-ID
+      required: false
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    BadRequest:
+      description: Ungültige Anfrage / Validierungsfehler
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: Ressource nicht gefunden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Conflict:
+      description: Konflikt (z.B. bereits vorhanden / Status-Konflikt)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    InternalServerError:
+      description: Unerwarteter Serverfehler
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    PracticeOk:
+      description: Erfolgreich
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PracticeDto'
+
+    PracticeCreated:
+      description: Praxis erfolgreich erstellt
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PracticeDto'
+
+    PracticePageOk:
+      description: Erfolgreich (paged)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PracticePageResponse'
+
+    WorkingHoursOk:
+      description: Erfolgreich
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/WorkingHoursDto'
+
+    WorkingHoursCreated:
+      description: Working Hours erfolgreich erstellt
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/WorkingHoursDto'
+
+    WorkingHoursListOk:
+      description: Erfolgreich
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/WorkingHoursDto'
+
+    SlotOk:
+      description: Erfolgreich
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SlotDto'
+
+    SlotPageOk:
+      description: Erfolgreich (paged)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SlotPageResponse'
+
   schemas:
+    CityDto:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: München
+
+    SpecialityDto:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Kardiologie
+
+    PracticeDto:
+      type: object
+      required: [id, name, email, cityId]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        street:
+          type: string
+        houseNumber:
+          type: string
+        postalCode:
+          type: string
+        cityId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreatePracticeRequest:
+      type: object
+      required: [name, email, cityId]
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 200
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        street:
+          type: string
+        houseNumber:
+          type: string
+        postalCode:
+          type: string
+        cityId:
+          type: string
+          format: uuid
+
+    UpdatePracticeRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 200
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        street:
+          type: string
+        houseNumber:
+          type: string
+        postalCode:
+          type: string
+        cityId:
+          type: string
+          format: uuid
+
+    PracticePageResponse:
+      type: object
+      required: [items, page, size, totalElements, totalPages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PracticeDto'
+        page:
+          type: integer
+          minimum: 0
+        size:
+          type: integer
+          minimum: 1
+        totalElements:
+          type: integer
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 0
+
+    DoctorPageResponse:
+      type: object
+      required: [items, page, size, totalElements, totalPages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DoctorDto'
+        page:
+          type: integer
+          minimum: 0
+        size:
+          type: integer
+          minimum: 1
+        totalElements:
+          type: integer
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 0
+
+    Weekday:
+      type: string
+      enum: [MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY]
+
+    WorkingHoursDto:
+      type: object
+      required: [id, doctorId, weekday, startTime, endTime]
+      properties:
+        id:
+          type: string
+          format: uuid
+        doctorId:
+          type: string
+          format: uuid
+        weekday:
+          $ref: '#/components/schemas/Weekday'
+        startTime:
+          type: string
+          format: time
+        endTime:
+          type: string
+          format: time
+
+    CreateWorkingHoursRequest:
+      type: object
+      required: [weekday, startTime, endTime]
+      properties:
+        weekday:
+          $ref: '#/components/schemas/Weekday'
+        startTime:
+          type: string
+          format: time
+        endTime:
+          type: string
+          format: time
+
+    UpdateWorkingHoursRequest:
+      type: object
+      properties:
+        weekday:
+          $ref: '#/components/schemas/Weekday'
+        startTime:
+          type: string
+          format: time
+        endTime:
+          type: string
+          format: time
+
+    SlotStatus:
+      type: string
+      enum: [AVAILABLE, BOOKED, BLOCKED]
+
+    SlotDto:
+      type: object
+      required: [id, doctorId, startTime, endTime, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        doctorId:
+          type: string
+          format: uuid
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/SlotStatus'
+
+    GenerateSlotsRequest:
+      type: object
+      required: [startDate, endDate, slotDurationMinutes]
+      properties:
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        slotDurationMinutes:
+          type: integer
+          minimum: 5
+          maximum: 480
+
+    BookSlotRequest:
+      type: object
+      description: |
+        Optionaler Payload für Slot-Buchung.
+        Kann später erweitert werden (z.B. patientId, correlationId).
+      properties:
+        patientId:
+          type: string
+          format: uuid
+
+    SlotPageResponse:
+      type: object
+      required: [items, page, size, totalElements, totalPages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SlotDto'
+        page:
+          type: integer
+          minimum: 0
+        size:
+          type: integer
+          minimum: 1
+        totalElements:
+          type: integer
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 0
+
+    # ===== Bestehende Schemas (Doctor/Address/Appointment/Error) =====
     DoctorDto:
       type: object
       required:
         - id
         - firstName
         - lastName
-        - specialty
-        - email
+        - practiceId
       properties:
         id:
           type: string
@@ -239,21 +1052,16 @@ components:
           type: string
           description: Nachname des Arztes
           example: Müller
-        specialty:
+        practiceId:
           type: string
-          description: Fachrichtung des Arztes
-          example: Allgemeinmedizin
-        email:
-          type: string
-          format: email
-          description: E-Mail-Adresse
-          example: hans.mueller@example.com
-        phone:
-          type: string
-          description: Telefonnummer
-          example: +49 123 456789
-        address:
-          $ref: '#/components/schemas/AddressDto'
+          format: uuid
+          description: ID der Praxis, in der der Arzt arbeitet
+        specialityIds:
+          type: array
+          description: Liste der Fachrichtungs-IDs des Arztes
+          items:
+            type: string
+            format: uuid
         createdAt:
           type: string
           format: date-time
@@ -268,8 +1076,7 @@ components:
       required:
         - firstName
         - lastName
-        - specialty
-        - email
+        - practiceId
       properties:
         firstName:
           type: string
@@ -281,20 +1088,16 @@ components:
           minLength: 2
           maxLength: 100
           description: Nachname des Arztes
-        specialty:
+        practiceId:
           type: string
-          minLength: 2
-          maxLength: 100
-          description: Fachrichtung des Arztes
-        email:
-          type: string
-          format: email
-          description: E-Mail-Adresse
-        phone:
-          type: string
-          description: Telefonnummer
-        address:
-          $ref: '#/components/schemas/AddressDto'
+          format: uuid
+          description: ID der Praxis, in der der Arzt arbeitet
+        specialityIds:
+          type: array
+          description: Liste der Fachrichtungs-IDs (optional, kann später über separaten Endpoint hinzugefügt werden)
+          items:
+            type: string
+            format: uuid
 
     UpdateDoctorRequest:
       type: object
@@ -309,23 +1112,18 @@ components:
           minLength: 2
           maxLength: 100
           description: Nachname des Arztes
-        specialty:
+        practiceId:
           type: string
-          minLength: 2
-          maxLength: 100
-          description: Fachrichtung des Arztes
-        email:
-          type: string
-          format: email
-          description: E-Mail-Adresse
-        phone:
-          type: string
-          description: Telefonnummer
-        address:
-          $ref: '#/components/schemas/AddressDto'
+          format: uuid
+          description: ID der Praxis, in der der Arzt arbeitet
 
     AddressDto:
       type: object
+      deprecated: true
+      description: |
+        DEPRECATED: Wird nicht mehr für Doctor verwendet.
+        Adressinformationen werden über Practice-Objekt abgerufen.
+        Könnte zukünftig für andere Zwecke verwendet werden.
       properties:
         street:
           type: string
@@ -346,6 +1144,10 @@ components:
 
     AppointmentSlotDto:
       type: object
+      deprecated: true
+      description: |
+        DEPRECATED: Bitte verwenden Sie stattdessen SlotDto.
+        Dieses Schema wird in einer zukünftigen Version entfernt.
       required:
         - id
         - doctorId
@@ -384,6 +1186,7 @@ components:
         - status
         - error
         - message
+        - path
       properties:
         timestamp:
           type: string
@@ -392,6 +1195,7 @@ components:
         status:
           type: integer
           description: HTTP Status Code
+          example: 400
         error:
           type: string
           description: Fehlertyp

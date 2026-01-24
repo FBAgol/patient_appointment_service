@@ -15,5 +15,6 @@ public class Practice {
     private String houseNumber;
     private String phone;
     private String email;
-    private UUID cityId; // ← NUR die ID! Beziehung zu City (FK in practice-Tabelle)
+    private String postalCode;   // PLZ direkt in Practice (für API-Ergonomie)
+    private UUID cityId;         // ← Beziehung zu City (FK in practice-Tabelle)
 }
