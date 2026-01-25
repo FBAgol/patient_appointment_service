@@ -78,6 +78,14 @@ doctor-provider/
 ### **Schritt 6: Infrastructure Layer implementieren**
 - **Persistence Adapter:**
   - JPA Entities (von Domain Models trennen!)
+  - **JPA Converter** erstellen (WICHTIG!)
+    - **Was:** Übersetzen zwischen Datenbank-Typen und Java-Enums
+    - **Warum nötig:** Datenbank speichert z.B. INT (1-7) oder PostgreSQL ENUM ('available'), aber Java verwendet type-safe Enums (Weekday.MONDAY, SlotStatus.AVAILABLE)
+    - **Beispiele in diesem Projekt:**
+      - `WeekdayConverter`: INT (1-7) ↔ Weekday.MONDAY/TUESDAY/...
+      - `SlotStatusConverter`: PostgreSQL ENUM 'available' ↔ SlotStatus.AVAILABLE
+      - `SpecialityTypeConverter`: PostgreSQL ENUM 'allgemeinmedizin' ↔ SpecialityTyp.Allgemeinmedizin
+    - **Implementierung:** `@Converter(autoApply = true)` mit `AttributeConverter<JavaEnum, DBType>`
   - JPA Repositories
   - Mapper (Domain ↔ JPA Entity)
 - **REST Adapter:**
@@ -150,9 +158,14 @@ patient-customer/
 - `AppointmentApplicationService` (nutzt DoctorProviderPort)
 
 ### **Schritt 7: Infrastructure Layer**
-- Persistence Adapter
-- REST Controller
-- Doctor-Provider Client Implementierung
+- **Persistence Adapter:**
+  - JPA Entities
+  - **JPA Converter** (falls Enums verwendet werden - z.B. AppointmentStatus)
+  - JPA Repositories
+  - Mapper (Domain ↔ JPA Entity)
+- **REST Adapter:**
+  - REST Controller
+- **Doctor-Provider Client Implementierung** (Outbound Adapter)
 
 ### **Schritt 8: Tests**
 - **Unit Tests** für Domain Services
@@ -401,6 +414,9 @@ Feature implementieren → Tests schreiben → Nächstes Feature
 - [ ] OpenAPI Spec definiert
 - [ ] Domain Services mit Tests
 - [ ] Application Services
+- [ ] JPA Entities erstellt
+- [ ] JPA Converter erstellt (Weekday, SlotStatus, SpecialityType)
+- [ ] JPA Repositories implementiert
 - [ ] Persistence Adapter
 - [ ] REST Controller
 - [ ] Integration Tests
@@ -416,6 +432,9 @@ Feature implementieren → Tests schreiben → Nächstes Feature
 - [ ] Doctor-Provider Client
 - [ ] Domain Services mit Tests
 - [ ] Application Services
+- [ ] JPA Entities erstellt
+- [ ] JPA Converter erstellt (falls Enums vorhanden)
+- [ ] JPA Repositories implementiert
 - [ ] Persistence Adapter
 - [ ] REST Controller
 - [ ] Integration Tests (mit gemocktem Doctor-Provider)
@@ -435,6 +454,45 @@ Feature implementieren → Tests schreiben → Nächstes Feature
 - [ ] Security (Token-Handling)
 - [ ] Error Handling
 - [ ] Responsive Design
+
+---
+
+## 🔧 Quick Reference: JPA Converter
+
+**Wann brauche ich einen Converter?**
+- Wenn Datenbank und Java unterschiedliche Typen verwenden
+- Häufigster Fall: PostgreSQL ENUM oder INT ↔ Java Enum
+
+**Code-Template:**
+```java
+@Converter(autoApply = true)
+public class MyEnumConverter implements AttributeConverter<JavaEnum, DbType> {
+    
+    @Override
+    public DbType convertToDatabaseColumn(JavaEnum javaEnum) {
+        return javaEnum == null ? null : javaEnum.getValue();
+    }
+    
+    @Override
+    public JavaEnum convertToEntityAttribute(DbType dbValue) {
+        return dbValue == null ? null : JavaEnum.fromValue(dbValue);
+    }
+}
+```
+
+**Verwendung in JPA Entity:**
+```java
+@Entity
+public class MyEntity {
+    @Convert(converter = MyEnumConverter.class)  // Optional bei autoApply=true
+    private JavaEnum myField;
+}
+```
+
+**Beispiele aus diesem Projekt:**
+1. **WeekdayConverter**: `INT (1-7)` ↔ `Weekday.MONDAY`
+2. **SlotStatusConverter**: `String 'available'` ↔ `SlotStatus.AVAILABLE`
+3. **SpecialityTypeConverter**: `String 'allgemeinmedizin'` ↔ `SpecialityTyp.Allgemeinmedizin`
 
 ---
 

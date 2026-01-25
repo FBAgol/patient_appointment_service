@@ -182,12 +182,7 @@ paths:
       description: Gibt eine Liste aller registrierten Ärzte zurück
       operationId: getAllDoctors
       parameters:
-        - name: specialty
-          in: query
-          description: Filter nach Fachrichtung
-          required: false
-          schema:
-            type: string
+        - $ref: '#/components/parameters/SpecialityIdQuery'
         - $ref: '#/components/parameters/PageQuery'
         - $ref: '#/components/parameters/SizeQuery'
       responses:
@@ -777,7 +772,7 @@ components:
   schemas:
     CityDto:
       type: object
-      required: [id, name]
+      required: [id, name, postalCode]
       properties:
         id:
           type: string
@@ -785,6 +780,29 @@ components:
         name:
           type: string
           example: München
+        postalCode:
+          type: string
+          description: Postleitzahl der Stadt
+          example: "80331"
+
+    SpecialityType:
+      type: string
+      enum:
+        - allgemeinmedizin
+        - inneremedizin
+        - kardiologe
+        - dermatologe
+        - orthopäde
+        - neurologe
+        - psychiater
+        - gynäkologe
+        - pädiater
+        - urologe
+        - augenarzt
+        - hno
+        - radiologe
+        - anästhesist
+        - zahnarzt
 
     SpecialityDto:
       type: object
@@ -794,8 +812,7 @@ components:
           type: string
           format: uuid
         name:
-          type: string
-          example: Kardiologie
+          $ref: '#/components/schemas/SpecialityType'
 
     PracticeDto:
       type: object
@@ -820,12 +837,6 @@ components:
         cityId:
           type: string
           format: uuid
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
 
     CreatePracticeRequest:
       type: object
@@ -1062,14 +1073,6 @@ components:
           items:
             type: string
             format: uuid
-        createdAt:
-          type: string
-          format: date-time
-          description: Erstellungszeitpunkt
-        updatedAt:
-          type: string
-          format: date-time
-          description: Letzter Aktualisierungszeitpunkt
 
     CreateDoctorRequest:
       type: object

@@ -11,5 +11,5 @@ import lombok.NoArgsConstructor;
 public class City {
     private UUID id;
     private String name;
-    private String zipCode; // PLZ
+    private String postalCode;  // PLZ (mapped zu zip_code in DB)
 }
