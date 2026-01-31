@@ -46,15 +46,15 @@ paths:
       tags: [cities]
       summary: Alle Städte abrufen
       description: |
-        Gibt eine Liste aller Städte zurück.
+        Gibt eine paginierte Liste aller Städte zurück.
         Optional: Filter nach Name oder PLZ (Teilstring-Suche, case-insensitive).
         
         📥 BEISPIELE:
-        - GET /api/v1/cities → Alle Städte
-        - GET /api/v1/cities?name=Köln → Alle Städte mit "Köln" im Namen
+        - GET /api/v1/cities?page=0&size=20 → Erste 20 Städte
+        - GET /api/v1/cities?name=Köln&page=0&size=10 → Erste 10 Städte mit "Köln" im Namen
         - GET /api/v1/cities?postalCode=50667 → Stadt mit PLZ "50667"
         
-        📤 RESPONSE: Array von CityDto
+        📤 RESPONSE: CityPageResponse (paginiert mit Metadaten)
       operationId: findAllCities
       parameters:
         - name: name
@@ -79,15 +79,22 @@ paths:
             minLength: 1
             maxLength: 20
           example: "50667"
+        - $ref: '#/components/parameters/PageQuery'
+        - $ref: '#/components/parameters/SizeQuery'
       responses:
         '200':
-          description: Erfolgreich
+          description: Städte erfolgreich abgerufen (paginiert)
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/CityDto'
+                allOf:
+                  - $ref: '#/components/schemas/PageResponse'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/CityDto'
         '400':
           $ref: '#/components/responses/BadRequest'
         '500':
@@ -130,16 +137,33 @@ paths:
         - $ref: '#/components/parameters/SizeQuery'
       responses:
         '200':
-          $ref: '#/components/responses/PracticePageOk'
+          description: Praxen erfolgreich abgerufen (paginiert)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageResponse'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PracticeDto'
         '400':
           $ref: '#/components/responses/BadRequest'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+
+  /api/v1/practice:
+    # -------------------------------------------------------------------------
+    #  EINE Praxis anlegen
+    # -------------------------------------------------------------------------
     post:
       tags: [practices]
-      summary: Neue Praxis anlegen
-      description: Erstellt eine neue Praxis.
+      summary: Eine Praxis anlegen
+      description: |
+        Erstellt eine neue Praxis.
       operationId: registerPractice
       requestBody:
         required: true
@@ -149,7 +173,11 @@ paths:
               $ref: '#/components/schemas/CreatePracticeRequest'
       responses:
         '201':
-          $ref: '#/components/responses/PracticeCreated'
+          description: Praxis erfolgreich erstellt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PracticeDto'
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
@@ -157,59 +185,24 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /api/v1/practices/{name}:
-    get:
-      tags: [practices]
-      summary: Praxis nach Name und optional Stadt abrufen
-      description: |
-        Sucht eine Praxis nach dem Namen.
-        Optional kann auch nach Stadt gefiltert werden.
-        
-        📥 BEISPIELE:
-        1. Nur nach Praxisname:
-           → GET /api/v1/practices/Müller?
-           → Ergebnis: Alle Praxen mit "Müller" im Namen
-        
-        2. Nach Praxisname + Stadt:
-           → GET /api/v1/practices/Müller?cityName=Köln
-           → Ergebnis: Alle "Müller"-Praxen in Köln
-        
-        📤 RESPONSE: PracticeDto oder 404 wenn keine gefunden wurde.
-      operationId: findPracticeByName
-      parameters:
-        - name: name
-          in: path
-          description: Name der Praxis (Teilstring-Suche, case-insensitive)
-          required: true
-          schema:
-            type: string
-            minLength: 1
-            maxLength: 200
-        - $ref: '#/components/parameters/CityNameQuery'
-      responses:
-        '200':
-          $ref: '#/components/responses/PracticeOk'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
+  /api/v1/practice/{id}:
+    # -------------------------------------------------------------------------
+    # PUT /api/v1/practice/{id} - EINE Praxis aktualisieren (nach ID)
+    # -------------------------------------------------------------------------
     put:
       tags: [practices]
-      summary: Praxis aktualisieren (nach Name)
-      description: Aktualisiert eine Praxis basierend auf dem Namen
+      summary: Eine Praxis aktualisieren
+      description: |
+        Aktualisiert eine Praxis anhand ihrer ID.
       operationId: modifyPractice
       parameters:
-        - name: name
+        - name: id
           in: path
-          description: Name der Praxis
+          description: ID der Praxis
           required: true
           schema:
             type: string
-            minLength: 1
-            maxLength: 200
+            format: uuid
       requestBody:
         required: true
         content:
@@ -218,7 +211,11 @@ paths:
               $ref: '#/components/schemas/UpdatePracticeRequest'
       responses:
         '200':
-          $ref: '#/components/responses/PracticeOk'
+          description: Praxis erfolgreich aktualisiert
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PracticeDto'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -228,20 +225,23 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+    # -------------------------------------------------------------------------
+    # DELETE /api/v1/practice/{id} - EINE Praxis löschen (nach ID)
+    # -------------------------------------------------------------------------
     delete:
       tags: [practices]
-      summary: Praxis löschen (nach Name)
-      description: Löscht eine Praxis basierend auf dem Namen
+      summary: Eine Praxis löschen
+      description: |
+        Löscht eine Praxis anhand ihrer ID.
       operationId: removePractice
       parameters:
-        - name: name
+        - name: id
           in: path
-          description: Name der Praxis
+          description: ID der Praxis
           required: true
           schema:
             type: string
-            minLength: 1
-            maxLength: 200
+            format: uuid
       responses:
         '204':
           description: Praxis erfolgreich gelöscht
@@ -253,7 +253,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
   # ============================
-  # Doctors (CRUD) - bisherige Endpoints bleiben
+  # Doctors (CRUD)
   # ============================
   /api/v1/doctors:
     # -------------------------------------------------------------------------
@@ -261,7 +261,6 @@ paths:
     # -------------------------------------------------------------------------
     # 📥 INPUT: Query-Parameter (firstName, lastName, practiceId, specialityId, page, size)
     # 📤 OUTPUT: DoctorPageResponse (Liste von DoctorDto + Pagination-Info)
-    # ❌ ERROR: 400 (Bad Request), 500 (Internal Server Error)
     get:
       tags:
         - doctors
@@ -270,13 +269,13 @@ paths:
         Gibt eine paginierte Liste aller registrierten Ärzte zurück. 
         Unterstützt Suche nach Namen, Praxis und Fachrichtung.
         
-        📤 RESPONSE: DoctorPageResponse mit Array von DoctorDto
+        📤 RESPONSE: Paginierte Liste mit Array von DoctorDto
       operationId: findAllDoctors
       parameters:
         - $ref: '#/components/parameters/FirstNameQuery'
         - $ref: '#/components/parameters/LastNameQuery'
         - $ref: '#/components/parameters/PracticeIdQuery'
-        - $ref: '#/components/parameters/PracticeNameQuery'
+        - $ref: '#/components/parameters/CityIdQuery'
         - $ref: '#/components/parameters/SpecialityIdQuery'
         - $ref: '#/components/parameters/PageQuery'
         - $ref: '#/components/parameters/SizeQuery'
@@ -286,14 +285,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DoctorPageResponse'  # 📤 OUTPUT DTO
+                allOf:
+                  - $ref: '#/components/schemas/PageResponse'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DoctorDto'
         '400':
           $ref: '#/components/responses/BadRequest'              # ❌ ERROR
         '500':
           $ref: '#/components/responses/InternalServerError'     # ❌ ERROR
 
+  # ============================
+  # Doctor
+  # ============================
+  /api/v1/doctor:
     # -------------------------------------------------------------------------
-    # POST /api/v1/doctors - Neuen Arzt anlegen
+    # POST /api/v1/doctor - EINEN Arzt anlegen
     # -------------------------------------------------------------------------
     # 📥 INPUT: CreateDoctorRequest (firstName, lastName, practice/practiceId, specialityIds)
     # 📤 OUTPUT: DoctorDto (mit generierter ID)
@@ -301,17 +311,9 @@ paths:
     post:
       tags:
         - doctors
-      summary: Neuen Arzt anlegen
+      summary: Einen Arzt anlegen
       description: |
         Erstellt einen neuen Arzt im System.
-        
-        📥 REQUEST: CreateDoctorRequest
-           - firstName, lastName (PFLICHT)
-           - practice (PFLICHT für neue Praxis) ODER practiceId (für bestehende Praxis)
-           - specialityIds (OPTIONAL)
-           - KEINE id (wird vom Server generiert!)
-        
-        📤 RESPONSE: DoctorDto (mit generierter id)
       operationId: registerDoctor
       requestBody:
         required: true
@@ -333,77 +335,38 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'     # ❌ ERROR
 
-  # -------------------------------------------------------------------------
-  # Einzelner Arzt - Operationen mit {doctorId}
-  # -------------------------------------------------------------------------
-  /api/v1/doctors/{doctorId}:
-
+  /api/v1/doctor/{id}:
     # -------------------------------------------------------------------------
-    # GET /api/v1/doctors/{doctorId} - Arzt nach ID abrufen
+    # PUT /api/v1/doctor/{id} - EINEN Arzt aktualisieren (nach ID)
     # -------------------------------------------------------------------------
-    # 📥 INPUT: doctorId (UUID aus URL-Path)
-    # 📤 OUTPUT: DoctorDto (vollständige Arzt-Daten)
-    # ❌ ERROR: 400, 404 (Not Found), 500
-    get:
-      tags:
-        - doctors
-      summary: Arzt nach ID abrufen
-      description: |
-        Gibt die Details eines bestimmten Arztes zurück.
-        
-        📥 INPUT: doctorId in URL-Path
-        📤 OUTPUT: DoctorDto (mit id, firstName, lastName, practiceId, specialityIds)
-      operationId: findDoctorById
-      parameters:
-        - $ref: '#/components/parameters/DoctorIdPath'
-      responses:
-        '200':
-          description: Erfolgreich
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DoctorDto'          # 📤 OUTPUT DTO
-        '400':
-          $ref: '#/components/responses/BadRequest'             # ❌ ERROR
-        '404':
-          $ref: '#/components/responses/NotFound'               # ❌ ERROR (Arzt existiert nicht)
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-    # -------------------------------------------------------------------------
-    # PUT /api/v1/doctors/{doctorId} - Arzt aktualisieren
-    # -------------------------------------------------------------------------
-    # 📥 INPUT: doctorId (UUID aus URL) + UpdateDoctorRequest (Body)
-    # 📤 OUTPUT: DoctorDto (aktualisierte Daten)
-    # ❌ ERROR: 400, 404, 409, 500
     put:
       tags:
         - doctors
-      summary: Arzt aktualisieren
+      summary: Einen Arzt aktualisieren
       description: |
-        Aktualisiert die Daten eines bestehenden Arztes.
-        
-        📥 INPUT: 
-           - doctorId in URL-Path
-           - UpdateDoctorRequest (alle Felder OPTIONAL - nur senden, was geändert werden soll)
-        
-        📤 OUTPUT: DoctorDto (aktualisierte vollständige Daten)
+        Aktualisiert die Daten eines bestehenden Arztes anhand seiner ID.
       operationId: modifyDoctor
       parameters:
-        - $ref: '#/components/parameters/DoctorIdPath'
+        - name: id
+          in: path
+          description: ID des Arztes
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateDoctorRequest'  # 📥 INPUT REQUEST
+              $ref: '#/components/schemas/UpdateDoctorRequest'
       responses:
         '200':
           description: Arzt erfolgreich aktualisiert
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DoctorDto'          # 📤 OUTPUT DTO
+                $ref: '#/components/schemas/DoctorDto'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -414,127 +377,32 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
     # -------------------------------------------------------------------------
-    # DELETE /api/v1/doctors/{doctorId} - Arzt löschen
+    # DELETE /api/v1/doctor/{id} - EINEN Arzt löschen (nach ID)
     # -------------------------------------------------------------------------
-    # 📥 INPUT: doctorId (UUID aus URL-Path)
-    # 📤 OUTPUT: Kein Body (204 No Content)
-    # ❌ ERROR: 400, 404, 500
     delete:
       tags:
         - doctors
-      summary: Arzt löschen
+      summary: Einen Arzt löschen
       description: |
-        Löscht einen Arzt aus dem System.
-        
-        📥 INPUT: doctorId in URL-Path
-        📤 OUTPUT: Kein Body (204 No Content bei Erfolg)
+        Löscht einen Arzt aus dem System anhand seiner ID.
       operationId: removeDoctor
       parameters:
-        - $ref: '#/components/parameters/DoctorIdPath'
+        - name: id
+          in: path
+          description: ID des Arztes
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         '204':
-          description: Arzt erfolgreich gelöscht (kein Response-Body)
+          description: Arzt erfolgreich gelöscht
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
-          $ref: '#/components/responses/NotFound'               # ❌ Arzt nicht gefunden
+          $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
-
-  # ============================
-  # Search Endpoint (Kombinierte Suche)
-  # ============================
-  /api/v1/search:
-    # -------------------------------------------------------------------------
-    # GET /api/v1/search - Kombinierte Suche nach Ärzten
-    # -------------------------------------------------------------------------
-    # 📥 INPUT: Query-Parameter (ALLE OPTIONAL)
-    #   - doctorFirstName: Suche nach Arzt-Vorname (Teilstring-Suche)
-    #   - doctorLastName: Suche nach Arzt-Nachname (Teilstring-Suche)
-    #   - practiceName: Suche nach Praxis-Name (Teilstring-Suche)
-    #   - cityName: Suche nach Stadt-Name (z.B. "Köln")
-    #   - specialityName: Suche nach Fachrichtung (z.B. "HNO")
-    # 📤 OUTPUT: DoctorPageResponse mit Array von DoctorDto
-    #
-    # BUSINESS LOGIK:
-    # 1. Alle Parameter sind OPTIONAL
-    # 2. Suche nach "Alex" → alle Ärzte mit Vorname oder Nachname "Alex"
-    # 3. Suche nach "HNO" + "Köln" → alle HNO-Ärzte in Köln
-    # 4. Leer-Suche (keine Parameter) → alle Ärzte
-    get:
-      tags:
-        - search
-      summary: Kombinierte Suche nach Ärzten
-      description: |
-        🔍 Universeller Such-Endpoint für Ärzte mit flexiblen Filtern.
-        
-        ALLE Parameter sind OPTIONAL und können beliebig kombiniert werden:
-        
-        📥 SUCH-BEISPIELE:
-        1. Suche nach Arzt "Alex" (Vorname ODER Nachname):
-           → GET /api/v1/search?doctorFirstName=Alex
-           → Ergebnis: Alle Ärzte mit Vorname "Alex" oder Nachname "Alex"
-        
-        2. Suche nach HNO-Ärzten in Köln:
-           → GET /api/v1/search?specialityName=HNO&cityName=Köln
-           → Ergebnis: Alle HNO-Ärzte in Köln
-        
-        3. Suche nach Praxis "Praxis Müller":
-           → GET /api/v1/search?practiceName=Müller
-           → Ergebnis: Alle Ärzte in Praxen mit "Müller" im Namen
-        
-        4. Keine Parameter (Leer-Suche):
-           → GET /api/v1/search
-           → Ergebnis: ALLE Ärzte (paginiert)
-        
-        📤 RESPONSE: DoctorPageResponse mit Array von DoctorDto
-      operationId: searchDoctors
-      parameters:
-        - name: doctorFirstName
-          in: query
-          description: |
-            📥 OPTIONAL: Suche nach Arzt-Vorname (Teilstring-Suche, case-insensitive).
-            Beispiel: "Alex" findet "Alexander", "Alexia", etc.
-          required: false
-          schema:
-            type: string
-            minLength: 1
-            maxLength: 100
-        - name: doctorLastName
-          in: query
-          description: |
-            📥 OPTIONAL: Suche nach Arzt-Nachname (Teilstring-Suche, case-insensitive).
-            Beispiel: "Müller" findet "Müller", "Müllermann", etc.
-          required: false
-          schema:
-            type: string
-            minLength: 1
-            maxLength: 100
-        - $ref: '#/components/parameters/PracticeNameQuery'
-        - $ref: '#/components/parameters/CityNameQuery'
-        - name: specialityName
-          in: query
-          description: |
-            📥 OPTIONAL: Suche nach Fachrichtung (Teilstring-Suche, case-insensitive).
-            Beispiel: "HNO" findet "HNO", "Hals-Nasen-Ohren-Heilkunde".
-          required: false
-          schema:
-            type: string
-            minLength: 1
-            maxLength: 100
-        - $ref: '#/components/parameters/PageQuery'
-        - $ref: '#/components/parameters/SizeQuery'
-      responses:
-        '200':
-          description: Erfolgreich
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DoctorPageResponse'  # 📤 OUTPUT DTO
-        '400':
-          $ref: '#/components/responses/BadRequest'              # ❌ ERROR
-        '500':
-          $ref: '#/components/responses/InternalServerError'     # ❌ ERROR
 
 
   # ============================
@@ -555,7 +423,11 @@ paths:
               $ref: '#/components/schemas/CreateWorkingHoursRequest'
       responses:
         '201':
-          $ref: '#/components/responses/WorkingHoursCreated'
+          description: Working Hours erfolgreich erstellt
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkingHoursDto'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -573,7 +445,13 @@ paths:
         - $ref: '#/components/parameters/DoctorIdPath'
       responses:
         '200':
-          $ref: '#/components/responses/WorkingHoursListOk'
+          description: Working Hours erfolgreich abgerufen
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkingHoursDto'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -596,7 +474,11 @@ paths:
               $ref: '#/components/schemas/UpdateWorkingHoursRequest'
       responses:
         '200':
-          $ref: '#/components/responses/WorkingHoursOk'
+          description: Working Hours erfolgreich aktualisiert
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkingHoursDto'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -665,7 +547,18 @@ paths:
         - $ref: '#/components/parameters/SizeQuery'
       responses:
         '200':
-          $ref: '#/components/responses/SlotPageOk'
+          description: Slots erfolgreich abgerufen (paginiert)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageResponse'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/SlotDto'
         '400':
           $ref: '#/components/responses/BadRequest'
         '500':
@@ -680,7 +573,11 @@ paths:
         - $ref: '#/components/parameters/IdPath'
       responses:
         '200':
-          $ref: '#/components/responses/SlotOk'
+          description: Slot erfolgreich abgerufen
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SlotDto'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -697,7 +594,11 @@ paths:
         - $ref: '#/components/parameters/IdPath'
       responses:
         '200':
-          $ref: '#/components/responses/SlotOk'
+          description: Slot erfolgreich blockiert
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SlotDto'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -716,7 +617,11 @@ paths:
         - $ref: '#/components/parameters/IdPath'
       responses:
         '200':
-          $ref: '#/components/responses/SlotOk'
+          description: Slot erfolgreich freigegeben
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SlotDto'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -742,7 +647,11 @@ paths:
               $ref: '#/components/schemas/BookSlotRequest'
       responses:
         '200':
-          $ref: '#/components/responses/SlotOk'
+          description: Slot erfolgreich gebucht
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SlotDto'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -966,65 +875,65 @@ components:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
 
-    PracticeOk:
-      description: Erfolgreich
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/PracticeDto'
-
-    PracticeCreated:
-      description: Praxis erfolgreich erstellt
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/PracticeDto'
-
-    PracticePageOk:
-      description: Erfolgreich (paged)
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/PracticePageResponse'
-
-    WorkingHoursOk:
-      description: Erfolgreich
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/WorkingHoursDto'
-
-    WorkingHoursCreated:
-      description: Working Hours erfolgreich erstellt
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/WorkingHoursDto'
-
-    WorkingHoursListOk:
-      description: Erfolgreich
-      content:
-        application/json:
-          schema:
-            type: array
-            items:
-              $ref: '#/components/schemas/WorkingHoursDto'
-
-    SlotOk:
-      description: Erfolgreich
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/SlotDto'
-
-    SlotPageOk:
-      description: Erfolgreich (paged)
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/SlotPageResponse'
 
   schemas:
+    # =============================================================================
+    # 📄 GENERIC PAGE RESPONSE - Wiederverwendbar für alle paginierten Endpoints
+    # =============================================================================
+
+    # -------------------------------------------------------------------------
+    # 📤 PageResponse - Generic Pagination Wrapper
+    # -------------------------------------------------------------------------
+    # Dieses generische Schema wird von allen paginierten GET-Endpoints verwendet.
+    # Es eliminiert redundante *PageResponse Schemas (CityPageResponse, DoctorPageResponse, etc.)
+    #
+    # Verwendung mit allOf:
+    #   allOf:
+    #     - $ref: '#/components/schemas/PageResponse'
+    #     - properties:
+    #         items:
+    #           type: array
+    #           items:
+    #             $ref: '#/components/schemas/XxxDto'
+    PageResponse:
+      type: object
+      required: [items, page, size, totalElements, totalPages]
+      properties:
+        items:
+          type: array
+          description: |
+            Array von Elementen für die aktuelle Seite.
+            Der konkrete Typ wird pro Endpoint spezifiziert (z.B. CityDto, DoctorDto, etc.)
+          items: {}
+        page:
+          type: integer
+          minimum: 0
+          description: |
+            Aktuelle Seitennummer (0-basiert).
+            Erste Seite = 0, zweite Seite = 1, etc.
+          example: 0
+        size:
+          type: integer
+          minimum: 1
+          description: |
+            Anzahl der Elemente pro Seite.
+            Standard: 20 (konfigurierbar)
+          example: 20
+        totalElements:
+          type: integer
+          minimum: 0
+          description: |
+            Gesamtanzahl aller Elemente (über alle Seiten hinweg).
+            Beispiel: 150 Ärzte insgesamt
+          example: 150
+        totalPages:
+          type: integer
+          minimum: 0
+          description: |
+            Gesamtanzahl aller Seiten.
+            Berechnet als: ceil(totalElements / size)
+          example: 8
+
     # =============================================================================
     # 🏙️ CITY SCHEMAS - Master Data (Stammdaten)
     # =============================================================================
@@ -1067,6 +976,37 @@ components:
           minLength: 1
           maxLength: 20
           example: "50667"
+
+    # -------------------------------------------------------------------------
+    # 📤 CityPageResponse - OUTPUT (Server → Client)
+    # -------------------------------------------------------------------------
+    # Wird verwendet bei: GET /api/v1/cities (paginierte Liste)
+    # WICHTIG: Enthält Array von CityDto + Pagination-Metadaten
+    CityPageResponse:
+      type: object
+      required: [items, page, size, totalElements, totalPages]
+      properties:
+        items:
+          type: array
+          description: Array von CityDto (aktuelle Seite)
+          items:
+            $ref: '#/components/schemas/CityDto'
+        page:
+          type: integer
+          minimum: 0
+          description: Aktuelle Seitennummer (0-basiert)
+        size:
+          type: integer
+          minimum: 1
+          description: Anzahl Elemente pro Seite
+        totalElements:
+          type: integer
+          minimum: 0
+          description: Gesamtanzahl aller Städte
+        totalPages:
+          type: integer
+          minimum: 0
+          description: Gesamtanzahl aller Seiten
 
     # =============================================================================
     # 🩺 SPECIALITY SCHEMAS - Master Data (Stammdaten)
@@ -1126,15 +1066,13 @@ components:
     # WICHTIG: Enthält IMMER eine `id` (vom Server generiert)
     PracticeDto:
       type: object
-      required: [id, name, email, cityId]
+      required: [id, name, email,phone,street,houseNumber,postalCode, cityId]
       properties:
         id:
           type: string
           format: uuid
           description: |
-            Eindeutige ID der Praxis (vom Server generiert).
-            ✅ Wird IMMER vom Server zurückgegeben.
-            ❌ Wird NIEMALS vom Client gesendet.
+            Eindeutige ID der Praxis.
         name:
           type: string
           description: Name der Praxis
@@ -1144,16 +1082,16 @@ components:
           description: Email-Adresse der Praxis
         phone:
           type: string
-          description: Telefonnummer (optional)
+          description: Telefonnummer
         street:
           type: string
-          description: Straße (optional)
+          description: Straße
         houseNumber:
           type: string
-          description: Hausnummer (optional)
+          description: Hausnummer
         postalCode:
           type: string
-          description: Postleitzahl (optional)
+          description: Postleitzahl
         cityId:
           type: string
           format: uuid
@@ -1173,29 +1111,29 @@ components:
       properties:
         name:
           type: string
-          minLength: 2
+          minLength: 5
           maxLength: 200
           description: |
-            Name der Praxis (PFLICHT).
-            Validierung: 2-200 Zeichen
+            Name der Praxis.
+            Validierung: 5-200 Zeichen
         email:
           type: string
           format: email
           description: |
-            Email-Adresse der Praxis (PFLICHT).
+            Email-Adresse der Praxis.
             Validierung: Muss gültige Email sein
         phone:
           type: string
-          description: Telefonnummer (OPTIONAL)
+          description: Telefonnummer
         street:
           type: string
-          description: Straße (OPTIONAL)
+          description: Straße
         houseNumber:
           type: string
-          description: Hausnummer (OPTIONAL)
+          description: Hausnummer
         postalCode:
           type: string
-          description: Postleitzahl (OPTIONAL)
+          description: Postleitzahl
         cityId:
           type: string
           format: uuid
@@ -1215,7 +1153,7 @@ components:
       properties:
         name:
           type: string
-          minLength: 2
+          minLength: 5
           maxLength: 200
           description: Name der Praxis (OPTIONAL - nur senden, wenn geändert)
         email:
@@ -1239,67 +1177,6 @@ components:
           format: uuid
           description: ID der Stadt (OPTIONAL - nur senden, wenn geändert)
 
-    # -------------------------------------------------------------------------
-    # 📤 PracticePageResponse - OUTPUT (Server → Client)
-    # -------------------------------------------------------------------------
-    # Wird verwendet bei: GET /api/v1/practices (paginierte Liste)
-    # WICHTIG: Enthält Array von PracticeDto + Pagination-Metadaten
-    PracticePageResponse:
-      type: object
-      required: [items, page, size, totalElements, totalPages]
-      properties:
-        items:
-          type: array
-          description: Array von PracticeDto (aktuelle Seite)
-          items:
-            $ref: '#/components/schemas/PracticeDto'
-        page:
-          type: integer
-          minimum: 0
-          description: Aktuelle Seitennummer (0-basiert)
-        size:
-          type: integer
-          minimum: 1
-          description: Anzahl Elemente pro Seite
-        totalElements:
-          type: integer
-          minimum: 0
-          description: Gesamtanzahl aller Praxen
-        totalPages:
-          type: integer
-          minimum: 0
-          description: Gesamtanzahl aller Seiten
-
-    # -------------------------------------------------------------------------
-    # 📤 DoctorPageResponse - OUTPUT (Server → Client)
-    # -------------------------------------------------------------------------
-    # Wird verwendet bei: GET /api/v1/doctors (paginierte Liste)
-    # WICHTIG: Enthält Array von DoctorDto + Pagination-Metadaten
-    DoctorPageResponse:
-      type: object
-      required: [items, page, size, totalElements, totalPages]
-      properties:
-        items:
-          type: array
-          description: Array von DoctorDto (aktuelle Seite)
-          items:
-            $ref: '#/components/schemas/DoctorDto'
-        page:
-          type: integer
-          minimum: 0
-          description: Aktuelle Seitennummer (0-basiert)
-        size:
-          type: integer
-          minimum: 1
-          description: Anzahl Elemente pro Seite
-        totalElements:
-          type: integer
-          minimum: 0
-          description: Gesamtanzahl aller Ärzte
-        totalPages:
-          type: integer
-          minimum: 0
-          description: Gesamtanzahl aller Seiten
 
     # =============================================================================
     # ⏰ WORKING HOURS SCHEMAS - Request, Response & DTOs
@@ -1329,8 +1206,7 @@ components:
           type: string
           format: uuid
           description: |
-            Eindeutige ID der Working Hours (vom Server generiert).
-            ✅ Wird IMMER vom Server zurückgegeben.
+            Eindeutige ID der Working Hours.
         doctorId:
           type: string
           format: uuid
@@ -1563,23 +1439,19 @@ components:
           type: string
           format: uuid
           description: |
-            📤 OUTPUT (IMMER vorhanden)
             Eindeutige ID des Arztes (vom Server generiert).
-            ✅ Wird IMMER vom Server zurückgegeben.
-            ❌ Wird NIEMALS vom Client gesendet (nicht in CreateDoctorRequest).
           example: "550e8400-e29b-41d4-a716-446655440000"
         firstName:
           type: string
           description: |
-            📤 OUTPUT (IMMER vorhanden)
             Vorname des Arztes
-          example: Hans
+          example: "Hans"
         lastName:
           type: string
           description: |
             📤 OUTPUT (IMMER vorhanden)
             Nachname des Arztes
-          example: Müller
+          example: "Müller"
         practiceId:
           type: string
           format: uuid
@@ -1616,24 +1488,22 @@ components:
     CreateDoctorRequest:
       type: object
       required:
-        - firstName      # ✅ PFLICHT - Vorname muss immer angegeben werden
-        - lastName       # ✅ PFLICHT - Nachname muss immer angegeben werden
+        - firstName
+        - lastName
       properties:
         firstName:
           type: string
-          minLength: 2
+          minLength: 5
           maxLength: 100
           description: |
-            📥 INPUT (PFLICHT)
             Vorname des Arztes.
             Validierung: 2-100 Zeichen
           example: "Hans"
         lastName:
           type: string
-          minLength: 2
+          minLength: 5
           maxLength: 100
           description: |
-            📥 INPUT (PFLICHT)
             Nachname des Arztes.
             Validierung: 2-100 Zeichen
           example: "Müller"
@@ -1643,17 +1513,12 @@ components:
           description: |
             📥 INPUT (OPTIONAL)
             ID einer existierenden Praxis.
-            Wenn nicht angegeben, kann die Praxis-Zuordnung später per PUT /api/v1/doctors/{doctorId} erfolgen.
-            
-            ⚠️ WICHTIG: Praxis mit dieser ID muss bereits existieren!
           example: "550e8400-e29b-41d4-a716-446655440001"
         specialityIds:
           type: array
           description: |
             📥 INPUT (OPTIONAL)
             Liste der Fachrichtungs-IDs.
-            Wenn nicht angegeben, kann später per PUT /api/v1/doctors/{doctorId} oder 
-            POST /api/v1/doctors/{doctorId}/specialities/{specialityId} hinzugefügt werden.
           items:
             type: string
             format: uuid
@@ -1677,7 +1542,7 @@ components:
       properties:
         firstName:
           type: string
-          minLength: 2
+          minLength: 5
           maxLength: 100
           description: |
             📥 INPUT (OPTIONAL)
@@ -1685,7 +1550,7 @@ components:
             Validierung: 2-100 Zeichen
         lastName:
           type: string
-          minLength: 2
+          minLength: 5
           maxLength: 100
           description: |
             📥 INPUT (OPTIONAL)

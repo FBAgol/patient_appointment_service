@@ -1,6 +1,6 @@
 CREATE TABLE doctor (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    practice_id UUID NOT NULL,
+    practice_id UUID ,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
 
