@@ -1,9 +1,7 @@
 package test.doctor_provider.application.port.incoming;
 
 import test.doctor_provider.domain.model.Doctor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import jakarta.annotation.Nullable;
+import test.doctor_provider.domain.model.Page;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -19,40 +17,42 @@ public interface DoctorIncomingPort {
 
     /**
      * Gibt alle Ärzte zurück, optional gefiltert nach Suchkriterien.
-     * Alle Filter-Parameter sind optional (können null sein).
+     * Alle Filter-Parameter sind optional.
      *
-     * @param firstName Filter nach Vorname (Teilstring-Suche, case-insensitive), kann null sein
-     * @param lastName Filter nach Nachname (Teilstring-Suche, case-insensitive), kann null sein
-     * @param practiceId Filter nach Praxis-ID, kann null sein
-     * @param specialityId Filter nach Fachrichtung-ID, kann null sein
-     * @param pageable Pagination und Sortierung (required)
+     * Entspricht: GET /api/v1/doctors (operationId: findAllDoctors)
+     *
+     * @param firstName Filter nach Vorname (Teilstring-Suche, case-insensitive)
+     * @param lastName Filter nach Nachname (Teilstring-Suche, case-insensitive)
+     * @param practiceId Filter nach Praxis-ID
+     * @param cityId Filter nach Stadt-ID
+     * @param specialityId Filter nach Fachrichtung-ID
+     * @param page Seitennummer (0-basiert)
+     * @param size Anzahl der Elemente pro Seite
      * @return Paginierte Liste von Ärzten
      */
-    Page<Doctor> getAllDoctors(
-            @Nullable String firstName,
-            @Nullable String lastName,
-            @Nullable UUID practiceId,
-            @Nullable UUID specialityId,
-            Pageable pageable);
-
-    /**
-     * Gibt einen spezifischen Arzt anhand seiner ID zurück.
-     *
-     * @param doctorId UUID des Arztes
-     * @return Optional mit Doctor, leer wenn nicht gefunden
-     */
-    Optional<Doctor> getDoctorById(UUID doctorId);
+    Page<Doctor> findAllDoctors(
+            Optional<String> firstName,
+            Optional<String> lastName,
+            Optional<UUID> practiceId,
+            Optional<UUID> cityId,
+            Optional<UUID> specialityId,
+            int page,
+            int size);
 
     /**
      * Erstellt einen neuen Arzt im System.
      *
+     * Entspricht: POST /api/v1/doctor (operationId: registerDoctor)
+     *
      * @param doctor Domain-Modell des zu erstellenden Arztes (ohne ID)
      * @return Erstellter Arzt mit generierter ID
      */
-    Doctor createDoctor(Doctor doctor);
+    Doctor creatDoctor(Doctor doctor);
 
     /**
-     * Aktualisiert einen bestehenden Arzt.
+     * Aktualisiert einen bestehenden Arzt anhand seiner ID.
+     *
+     * Entspricht: PUT /api/v1/doctor/{id} (operationId: modifyDoctor)
      *
      * @param doctorId UUID des zu aktualisierenden Arztes
      * @param doctor Domain-Modell mit aktualisierten Daten
@@ -61,7 +61,9 @@ public interface DoctorIncomingPort {
     Doctor updateDoctor(UUID doctorId, Doctor doctor);
 
     /**
-     * Löscht einen Arzt aus dem System.
+     * Löscht einen Arzt aus dem System anhand seiner ID.
+     *
+     * Entspricht: DELETE /api/v1/doctor/{id} (operationId: removeDoctor)
      *
      * @param doctorId UUID des zu löschenden Arztes
      */
