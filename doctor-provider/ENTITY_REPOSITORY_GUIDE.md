@@ -137,12 +137,12 @@ import java.util.UUID;
 
 /**
  * JPA-Entity für die "city"-Tabelle.
- * 
+ *
  * WICHTIG:
  * - MIT JPA-Annotationen (@Entity, @Table, @Column)
  * - Mapped auf DB-Tabelle
  * - KEINE Business-Logik
- * 
+ *
  * Unterschiede zum Domain-Modell:
  * - postalCode (Domain) → zipCode (Entity) → zip_code (DB)
  */
@@ -153,7 +153,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CityEntity {
-    
+
     /**
      * Primary Key
      * - UUID-Typ
@@ -163,7 +163,7 @@ public class CityEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
-    
+
     /**
      * Stadt-Name
      * - Pflichtfeld (nullable = false)
@@ -171,12 +171,12 @@ public class CityEntity {
      */
     @Column(name = "name", nullable = false, length = 100)
     private String name;
-    
+
     /**
      * Postleitzahl
      * - Pflichtfeld
      * - Feld heißt in DB "zip_code", in Entity "zipCode"
-     * 
+     *
      * ⚠️ WICHTIG: Unterschied zum Domain-Modell (dort "postalCode")
      */
     @Column(name = "zip_code", nullable = false, length = 20)
@@ -234,9 +234,9 @@ public enum SpecialityTyp {
     Dermatologie("dermatologe"),
     // ... weitere Werte
     Zahnmedizin("zahnarzt");
-    
+
     private final String value;
-    
+
     SpecialityTyp(String value) {
         this.value = value;
     }
@@ -292,7 +292,7 @@ import java.util.UUID;
 
 /**
  * JPA-Entity für die "speciality"-Tabelle.
- * 
+ *
  * BESONDERHEIT: PostgreSQL ENUM-Typ
  * - DB-Spalte hat Typ "speciality_type" (PostgreSQL ENUM)
  * - Java-Feld hat Typ "SpecialityTyp" (Java Enum)
@@ -305,17 +305,17 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SpecialityEntity {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
-    
+
     /**
      * PostgreSQL ENUM-Spalte
-     * 
+     *
      * WICHTIG - Drei Annotationen erforderlich:
-     * 
+     *
      * 1️⃣ @Enumerated(EnumType.STRING)
      * 2️⃣ @JdbcTypeCode(SqlTypes.NAMED_ENUM)
      * 3️⃣ @Column(columnDefinition = "speciality_type")
@@ -457,14 +457,14 @@ CREATE TABLE speciality (
 public class SpecialityEntity {
     @Id
     private UUID id;
-    
+
     @Enumerated(EnumType.STRING)  // ← Nur eine Annotation!
     @Column(name = "name", nullable = false, length = 50)
     private SpecialityTyp name;
 }
 ```
 
-**Vorteil:** ✅ Einfacher  
+**Vorteil:** ✅ Einfacher
 **Nachteil:** ❌ Keine DB-seitige Validierung (du könntest theoretisch "xyz" einfügen)
 
 ---
@@ -488,7 +488,7 @@ CREATE TABLE speciality (
 public class SpecialityEntity {
     @Id
     private UUID id;
-    
+
     @Enumerated(EnumType.STRING)           // ← 1. Annotation
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)     // ← 2. Annotation
     @Column(name = "name", columnDefinition = "speciality_type")  // ← 3. Annotation
@@ -496,7 +496,7 @@ public class SpecialityEntity {
 }
 ```
 
-**Vorteil:** ✅ DB-seitige Validierung (PostgreSQL erlaubt nur gültige Werte)  
+**Vorteil:** ✅ DB-seitige Validierung (PostgreSQL erlaubt nur gültige Werte)
 **Nachteil:** ⚠️ Komplexer (aber sicherer!)
 
 ---
@@ -544,7 +544,7 @@ import java.util.UUID;
 
 /**
  * JPA-Entity für die "practice"-Tabelle.
- * 
+ *
  * Beziehungen:
  * - n:1 zu CityEntity (Viele Praxen → Eine Stadt)
  */
@@ -555,39 +555,39 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PracticeEntity {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
-    
+
     @Column(name = "name", nullable = false, length = 255)
     private String name;
-    
+
     @Column(name = "street", nullable = false, length = 255)
     private String street;
-    
+
     @Column(name = "house_number", nullable = false, length = 10)
     private String houseNumber;
-    
+
     @Column(name = "phone", nullable = false, length = 50)
     private String phone;
-    
+
     @Column(name = "email", nullable = false, length = 255)
     private String email;
-    
+
     @Column(name = "postal_code", nullable = false, length = 20)
     private String postalCode;
-    
+
     /**
      * n:1 Beziehung zu CityEntity
-     * 
+     *
      * WICHTIG:
      * - @ManyToOne: Viele Praxen → Eine Stadt
      * - @JoinColumn: FK-Spalte in der practice-Tabelle
      * - fetch = LAZY: Stadt wird nur geladen, wenn benötigt (Performance!)
      * - optional = false: city_id ist Pflicht (NOT NULL)
-     * 
+     *
      * ⚠️ Im Domain-Modell ist das nur eine UUID (cityId)!
      */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -648,7 +648,7 @@ import java.util.UUID;
 
 /**
  * JPA-Entity für die "doctor"-Tabelle.
- * 
+ *
  * Beziehungen:
  * - n:1 zu PracticeEntity (OPTIONAL - kann null sein)
  * - n:m zu SpecialityEntity (über Join-Tabelle)
@@ -660,34 +660,34 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DoctorEntity {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
-    
+
     @Column(name = "first_name", nullable = false, length = 100)
     private String firstName;
-    
+
     @Column(name = "last_name", nullable = false, length = 100)
     private String lastName;
-    
+
     /**
      * n:1 Beziehung zu PracticeEntity (OPTIONAL)
-     * 
+     *
      * WICHTIG:
      * - optional = true: practice_id kann NULL sein
      * - fetch = LAZY: Performance-Optimierung
-     * 
+     *
      * ⚠️ Im Domain-Modell: UUID practiceId (kann null sein)
      */
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "practice_id", nullable = true)
     private PracticeEntity practice;
-    
+
     /**
      * n:m Beziehung zu SpecialityEntity
-     * 
+     *
      * WICHTIG:
      * - @ManyToMany: Viele Ärzte ↔ Viele Fachrichtungen
      * - @JoinTable: Join-Tabelle "doctor_speciality"
@@ -695,7 +695,7 @@ public class DoctorEntity {
      * - inverseJoinColumns: FK zu speciality (andere Seite)
      * - fetch = LAZY: Performance!
      * - Set statt List: Keine Duplikate
-     * 
+     *
      * ⚠️ Im Domain-Modell: Set<UUID> specialityIds
      */
     @ManyToMany(fetch = FetchType.LAZY)
@@ -792,24 +792,24 @@ public class DoctorSpecialityId implements Serializable {
 @NoArgsConstructor
 @AllArgsConstructor
 public class DoctorSpecialityEntity {
-    
+
     @EmbeddedId
     private DoctorSpecialityId id;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("doctorId")
     @JoinColumn(name = "doctor_id")
     private DoctorEntity doctor;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("specialityId")
     @JoinColumn(name = "speciality_id")
     private SpecialityEntity speciality;
-    
+
     // Zusätzliche Felder
     @Column(name = "certified_since")
     private LocalDate certifiedSince;
-    
+
     @Column(name = "certification_number", length = 50)
     private String certificationNumber;
 }
@@ -819,7 +819,7 @@ public class DoctorSpecialityEntity {
 @Table(name = "doctor")
 public class DoctorEntity {
     // ...existing fields...
-    
+
     @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<DoctorSpecialityEntity> doctorSpecialities = new HashSet<>();
 }
@@ -873,7 +873,7 @@ import java.util.UUID;
 
 /**
  * JPA-Entity für die "slot"-Tabelle.
- * 
+ *
  * Besonderheiten:
  * - ZonedDateTime für Zeitstempel mit Timezone
  * - Enum-Mapping (@Enumerated)
@@ -886,22 +886,22 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SlotEntity {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
-    
+
     /**
      * n:1 Beziehung zu WorkingHoursEntity
      */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "working_hours_id", nullable = false)
     private WorkingHoursEntity workingHours;
-    
+
     /**
      * Start-Zeitpunkt mit Timezone
-     * 
+     *
      * WICHTIG:
      * - ZonedDateTime für TIMESTAMPTZ in PostgreSQL
      * - Speichert Datum, Zeit UND Timezone
@@ -909,20 +909,20 @@ public class SlotEntity {
      */
     @Column(name = "start_time", nullable = false, columnDefinition = "TIMESTAMPTZ")
     private ZonedDateTime startTime;
-    
+
     /**
      * End-Zeitpunkt mit Timezone
      */
     @Column(name = "end_time", nullable = false, columnDefinition = "TIMESTAMPTZ")
     private ZonedDateTime endTime;
-    
+
     /**
      * Slot-Status als Enum
-     * 
+     *
      * WICHTIG:
      * - @Enumerated(EnumType.STRING): Speichert als String ("AVAILABLE")
      * - EnumType.ORDINAL würde als Zahl speichern (0, 1, 2) - NICHT empfohlen!
-     * 
+     *
      * Warum STRING?
      * - Lesbar in DB
      * - Änderungen an Enum-Reihenfolge ändern nicht die DB-Werte
@@ -979,12 +979,12 @@ import java.util.UUID;
 
 /**
  * Spring Data JPA Repository für CityEntity.
- * 
+ *
  * WICHTIG:
  * - Extends JpaRepository<Entity, ID-Type>
  * - Spring generiert automatisch Implementierung
  * - KEINE Implementierung nötig!
- * 
+ *
  * Automatisch verfügbare Methoden (von JpaRepository):
  * - save(entity)
  * - findById(id)
@@ -996,63 +996,63 @@ import java.util.UUID;
  */
 @Repository
 public interface CityJpaRepository extends JpaRepository<CityEntity, UUID> {
-    
+
     // ========================================================================
     // Custom Query Methods (Spring generiert automatisch SQL!)
     // ========================================================================
-    
+
     /**
      * Findet Städte nach Name (Teilstring, case-insensitive)
-     * 
+     *
      * Spring generiert automatisch:
      * SELECT * FROM city WHERE LOWER(name) LIKE LOWER(:name)
-     * 
+     *
      * Naming-Convention: findBy + Feldname + ContainingIgnoreCase
      */
     Page<CityEntity> findByNameContainingIgnoreCase(String name, Pageable pageable);
-    
+
     /**
      * Findet Städte nach PLZ (exakte Suche)
-     * 
+     *
      * Spring generiert automatisch:
      * SELECT * FROM city WHERE zip_code = :zipCode
-     * 
+     *
      * Naming-Convention: findBy + Feldname
      */
     Page<CityEntity> findByZipCode(String zipCode, Pageable pageable);
-    
+
     /**
      * Findet Städte nach Name UND PLZ
-     * 
+     *
      * Spring generiert automatisch:
-     * SELECT * FROM city 
+     * SELECT * FROM city
      * WHERE LOWER(name) LIKE LOWER(:name) AND zip_code = :zipCode
-     * 
+     *
      * Naming-Convention: findBy + Feld1 + And + Feld2
      */
     Page<CityEntity> findByNameContainingIgnoreCaseAndZipCode(
-        String name, 
-        String zipCode, 
+        String name,
+        String zipCode,
         Pageable pageable
     );
-    
+
     // ========================================================================
     // Custom JPQL Queries (für komplexere Abfragen)
     // ========================================================================
-    
+
     /**
      * Custom Query mit @Query-Annotation
-     * 
+     *
      * JPQL (Java Persistence Query Language):
      * - Arbeitet mit Entity-Namen (CityEntity), nicht Tabellennamen!
      * - :name ist ein Named Parameter
      */
     @Query("SELECT c FROM CityEntity c WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :name, '%'))")
     Page<CityEntity> searchByName(@Param("name") String name, Pageable pageable);
-    
+
     /**
      * Zählt Städte nach PLZ-Präfix
-     * 
+     *
      * JPQL mit COUNT:
      */
     @Query("SELECT COUNT(c) FROM CityEntity c WHERE c.zipCode LIKE :prefix%")
@@ -1094,47 +1094,47 @@ import java.util.UUID;
 
 /**
  * Spring Data JPA Repository für PracticeEntity.
- * 
+ *
  * Besonderheiten:
  * - Queries über Beziehungen (city.name, city.id)
  * - JOIN FETCH für Eager Loading (Performance)
  */
 @Repository
 public interface PracticeJpaRepository extends JpaRepository<PracticeEntity, UUID> {
-    
+
     // ========================================================================
     // Queries über Beziehungen
     // ========================================================================
-    
+
     /**
      * Findet Praxen nach Stadt-Name
-     * 
+     *
      * Spring generiert automatisch:
-     * SELECT * FROM practice p 
-     * JOIN city c ON p.city_id = c.id 
+     * SELECT * FROM practice p
+     * JOIN city c ON p.city_id = c.id
      * WHERE LOWER(c.name) LIKE LOWER(:cityName)
-     * 
+     *
      * Naming-Convention: findBy + RelatedEntity + _ + Field
      */
     Page<PracticeEntity> findByCity_NameContainingIgnoreCase(String cityName, Pageable pageable);
-    
+
     /**
      * Findet Praxen nach Stadt-ID
      */
     Page<PracticeEntity> findByCity_Id(UUID cityId, Pageable pageable);
-    
+
     /**
      * Findet Praxis nach Name (exakte Suche)
      */
     Optional<PracticeEntity> findByName(String name);
-    
+
     // ========================================================================
     // Custom Queries mit JOIN FETCH (Performance-Optimierung)
     // ========================================================================
-    
+
     /**
      * Findet Praxis mit Stadt (Eager Loading)
-     * 
+     *
      * WICHTIG:
      * - JOIN FETCH lädt die City-Entity sofort mit
      * - Verhindert N+1 Problem (mehrere DB-Queries)
@@ -1142,22 +1142,22 @@ public interface PracticeJpaRepository extends JpaRepository<PracticeEntity, UUI
      */
     @Query("SELECT p FROM PracticeEntity p JOIN FETCH p.city WHERE p.id = :id")
     Optional<PracticeEntity> findByIdWithCity(@Param("id") UUID id);
-    
+
     /**
      * Findet alle Praxen mit Stadt (Eager Loading)
-     * 
+     *
      * ⚠️ VORSICHT: Bei großen Datenmengen kann das langsam sein!
      */
     @Query("SELECT DISTINCT p FROM PracticeEntity p JOIN FETCH p.city")
     Page<PracticeEntity> findAllWithCity(Pageable pageable);
-    
+
     /**
      * Sucht Praxen nach Name UND Stadt-Name
      */
     @Query("""
-        SELECT p FROM PracticeEntity p 
-        JOIN p.city c 
-        WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :practiceName, '%')) 
+        SELECT p FROM PracticeEntity p
+        JOIN p.city c
+        WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :practiceName, '%'))
         AND LOWER(c.name) LIKE LOWER(CONCAT('%', :cityName, '%'))
         """)
     Page<PracticeEntity> searchByPracticeNameAndCityName(
@@ -1186,7 +1186,7 @@ import java.util.UUID;
 
 /**
  * Spring Data JPA Repository für DoctorEntity.
- * 
+ *
  * Besonderheiten:
  * - Queries über n:m Beziehungen (specialities)
  * - Optional-Felder (practice kann null sein)
@@ -1194,11 +1194,11 @@ import java.util.UUID;
  */
 @Repository
 public interface DoctorJpaRepository extends JpaRepository<DoctorEntity, UUID> {
-    
+
     // ========================================================================
     // Einfache Queries
     // ========================================================================
-    
+
     /**
      * Findet Ärzte nach Vor- und Nachname
      */
@@ -1207,46 +1207,46 @@ public interface DoctorJpaRepository extends JpaRepository<DoctorEntity, UUID> {
         String lastName,
         Pageable pageable
     );
-    
+
     /**
      * Findet Ärzte nach Praxis-ID
-     * 
+     *
      * ⚠️ WICHTIG: practice kann NULL sein!
      */
     Page<DoctorEntity> findByPractice_Id(UUID practiceId, Pageable pageable);
-    
+
     /**
      * Findet Ärzte OHNE Praxis
      */
     Page<DoctorEntity> findByPracticeIsNull(Pageable pageable);
-    
+
     // ========================================================================
     // Queries über n:m Beziehungen
     // ========================================================================
-    
+
     /**
      * Findet Ärzte mit bestimmter Fachrichtung
-     * 
+     *
      * Spring generiert automatisch JOIN über doctor_speciality:
      * SELECT d.* FROM doctor d
      * JOIN doctor_speciality ds ON d.id = ds.doctor_id
      * WHERE ds.speciality_id = :specialityId
      */
     @Query("""
-        SELECT DISTINCT d FROM DoctorEntity d 
-        JOIN d.specialities s 
+        SELECT DISTINCT d FROM DoctorEntity d
+        JOIN d.specialities s
         WHERE s.id = :specialityId
         """)
     Page<DoctorEntity> findBySpecialityId(@Param("specialityId") UUID specialityId, Pageable pageable);
-    
+
     /**
      * Findet Ärzte mit MEHREREN Fachrichtungen (AND-Verknüpfung)
-     * 
+     *
      * Komplexe Query: Arzt muss ALLE angegebenen Fachrichtungen haben
      */
     @Query("""
-        SELECT d FROM DoctorEntity d 
-        WHERE :speciality1Id MEMBER OF d.specialities 
+        SELECT d FROM DoctorEntity d
+        WHERE :speciality1Id MEMBER OF d.specialities
         AND :speciality2Id MEMBER OF d.specialities
         """)
     Page<DoctorEntity> findByMultipleSpecialities(
@@ -1254,23 +1254,23 @@ public interface DoctorJpaRepository extends JpaRepository<DoctorEntity, UUID> {
         @Param("speciality2Id") UUID speciality2Id,
         Pageable pageable
     );
-    
+
     // ========================================================================
     // Komplexe Filter-Queries
     // ========================================================================
-    
+
     /**
      * Kombinierte Suche: Name + Praxis + Fachrichtung
-     * 
+     *
      * Alle Parameter sind OPTIONAL (null wird ignoriert)
      */
     @Query("""
-        SELECT DISTINCT d FROM DoctorEntity d 
-        LEFT JOIN d.practice p 
-        LEFT JOIN d.specialities s 
-        WHERE (:firstName IS NULL OR LOWER(d.firstName) LIKE LOWER(CONCAT('%', :firstName, '%'))) 
-        AND (:lastName IS NULL OR LOWER(d.lastName) LIKE LOWER(CONCAT('%', :lastName, '%'))) 
-        AND (:practiceId IS NULL OR p.id = :practiceId) 
+        SELECT DISTINCT d FROM DoctorEntity d
+        LEFT JOIN d.practice p
+        LEFT JOIN d.specialities s
+        WHERE (:firstName IS NULL OR LOWER(d.firstName) LIKE LOWER(CONCAT('%', :firstName, '%')))
+        AND (:lastName IS NULL OR LOWER(d.lastName) LIKE LOWER(CONCAT('%', :lastName, '%')))
+        AND (:practiceId IS NULL OR p.id = :practiceId)
         AND (:specialityId IS NULL OR s.id = :specialityId)
         """)
     Page<DoctorEntity> searchDoctors(
@@ -1280,18 +1280,18 @@ public interface DoctorJpaRepository extends JpaRepository<DoctorEntity, UUID> {
         @Param("specialityId") UUID specialityId,
         Pageable pageable
     );
-    
+
     /**
      * Findet Arzt mit allen Beziehungen (Eager Loading)
-     * 
+     *
      * WICHTIG:
      * - JOIN FETCH lädt practice UND specialities sofort
      * - Nur verwenden, wenn wirklich benötigt (Performance!)
      */
     @Query("""
-        SELECT DISTINCT d FROM DoctorEntity d 
-        LEFT JOIN FETCH d.practice 
-        LEFT JOIN FETCH d.specialities 
+        SELECT DISTINCT d FROM DoctorEntity d
+        LEFT JOIN FETCH d.practice
+        LEFT JOIN FETCH d.specialities
         WHERE d.id = :id
         """)
     Optional<DoctorEntity> findByIdWithRelations(@Param("id") UUID id);
@@ -1318,7 +1318,7 @@ import java.util.UUID;
 
 /**
  * Spring Data JPA Repository für SlotEntity.
- * 
+ *
  * Besonderheiten:
  * - Datum/Zeit-Queries (ZonedDateTime)
  * - Enum-Filter (SlotStatus)
@@ -1326,49 +1326,49 @@ import java.util.UUID;
  */
 @Repository
 public interface SlotJpaRepository extends JpaRepository<SlotEntity, UUID> {
-    
+
     // ========================================================================
     // Queries nach Status
     // ========================================================================
-    
+
     /**
      * Findet Slots nach Status
-     * 
+     *
      * Enum wird automatisch gemappt (STRING in DB)
      */
     Page<SlotEntity> findByStatus(SlotStatus status, Pageable pageable);
-    
+
     /**
      * Findet verfügbare Slots
      */
     Page<SlotEntity> findByStatusOrderByStartTimeAsc(SlotStatus status, Pageable pageable);
-    
+
     // ========================================================================
     // Queries nach Datum/Zeit
     // ========================================================================
-    
+
     /**
      * Findet Slots zwischen zwei Zeitpunkten
-     * 
+     *
      * WICHTIG:
      * - ZonedDateTime vergleicht Datum + Zeit + Timezone
      * - Between ist INKLUSIVE (start <= x <= end)
      */
     List<SlotEntity> findByStartTimeBetween(ZonedDateTime start, ZonedDateTime end);
-    
+
     /**
      * Findet Slots ab einem bestimmten Zeitpunkt
      */
     List<SlotEntity> findByStartTimeGreaterThanEqual(ZonedDateTime startTime);
-    
+
     /**
      * Findet verfügbare Slots für einen Tag
      */
     @Query("""
-        SELECT s FROM SlotEntity s 
-        WHERE s.startTime >= :dayStart 
-        AND s.startTime < :dayEnd 
-        AND s.status = :status 
+        SELECT s FROM SlotEntity s
+        WHERE s.startTime >= :dayStart
+        AND s.startTime < :dayEnd
+        AND s.status = :status
         ORDER BY s.startTime ASC
         """)
     List<SlotEntity> findAvailableSlotsForDay(
@@ -1376,22 +1376,22 @@ public interface SlotJpaRepository extends JpaRepository<SlotEntity, UUID> {
         @Param("dayEnd") ZonedDateTime dayEnd,
         @Param("status") SlotStatus status
     );
-    
+
     // ========================================================================
     // Queries über WorkingHours → Doctor
     // ========================================================================
-    
+
     /**
      * Findet Slots für einen bestimmten Arzt
-     * 
+     *
      * Join über: Slot → WorkingHours → Doctor
      */
     @Query("""
-        SELECT s FROM SlotEntity s 
-        JOIN s.workingHours wh 
-        WHERE wh.doctorId = :doctorId 
-        AND s.startTime >= :startDate 
-        AND s.startTime < :endDate 
+        SELECT s FROM SlotEntity s
+        JOIN s.workingHours wh
+        WHERE wh.doctorId = :doctorId
+        AND s.startTime >= :startDate
+        AND s.startTime < :endDate
         ORDER BY s.startTime ASC
         """)
     List<SlotEntity> findByDoctorAndDateRange(
@@ -1399,17 +1399,17 @@ public interface SlotJpaRepository extends JpaRepository<SlotEntity, UUID> {
         @Param("startDate") ZonedDateTime startDate,
         @Param("endDate") ZonedDateTime endDate
     );
-    
+
     /**
      * Findet verfügbare Slots für einen Arzt
      */
     @Query("""
-        SELECT s FROM SlotEntity s 
-        JOIN s.workingHours wh 
-        WHERE wh.doctorId = :doctorId 
-        AND s.startTime >= :startDate 
-        AND s.startTime < :endDate 
-        AND s.status = 'AVAILABLE' 
+        SELECT s FROM SlotEntity s
+        JOIN s.workingHours wh
+        WHERE wh.doctorId = :doctorId
+        AND s.startTime >= :startDate
+        AND s.startTime < :endDate
+        AND s.status = 'AVAILABLE'
         ORDER BY s.startTime ASC
         """)
     List<SlotEntity> findAvailableSlotsByDoctorAndDateRange(
@@ -1417,33 +1417,33 @@ public interface SlotJpaRepository extends JpaRepository<SlotEntity, UUID> {
         @Param("startDate") ZonedDateTime startDate,
         @Param("endDate") ZonedDateTime endDate
     );
-    
+
     // ========================================================================
     // Performance-Queries (mit Index-Nutzung)
     // ========================================================================
-    
+
     /**
      * Zählt Slots nach Status für einen Arzt
-     * 
+     *
      * Nutzt Index: idx_slot_working_hours
      */
     @Query("""
-        SELECT COUNT(s) FROM SlotEntity s 
-        JOIN s.workingHours wh 
-        WHERE wh.doctorId = :doctorId 
+        SELECT COUNT(s) FROM SlotEntity s
+        JOIN s.workingHours wh
+        WHERE wh.doctorId = :doctorId
         AND s.status = :status
         """)
     long countByDoctorAndStatus(
         @Param("doctorId") UUID doctorId,
         @Param("status") SlotStatus status
     );
-    
+
     /**
      * Prüft ob Slot-Zeit bereits existiert (für Validierung)
      */
     @Query("""
-        SELECT COUNT(s) > 0 FROM SlotEntity s 
-        WHERE s.workingHours.id = :workingHoursId 
+        SELECT COUNT(s) > 0 FROM SlotEntity s
+        WHERE s.workingHours.id = :workingHoursId
         AND s.startTime = :startTime
         """)
     boolean existsByWorkingHoursAndStartTime(
@@ -1510,7 +1510,7 @@ import java.util.UUID;
 
 /**
  * Persistence-Adapter für City.
- * 
+ *
  * VERANTWORTLICHKEITEN:
  * 1. Implementiert CityOutgoingPort
  * 2. Ruft CityJpaRepository auf
@@ -1520,45 +1520,45 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class CityPersistenceAdapter implements CityOutgoingPort {
-    
+
     private final CityJpaRepository repository;
     private final CityEntityMapper mapper;
-    
+
     @Override
     public Page<City> findAll(Optional<String> name, Optional<String> postalCode, int page, int size) {
         // Spring Data PageRequest erstellen
         PageRequest pageRequest = PageRequest.of(page, size);
-        
+
         // Je nach Filtern unterschiedliche Repository-Methode aufrufen
         org.springframework.data.domain.Page<CityEntity> entityPage;
-        
+
         if (name.isPresent() && postalCode.isPresent()) {
             // Beide Filter gesetzt
             entityPage = repository.findByNameContainingIgnoreCaseAndZipCode(
-                name.get(), 
-                postalCode.get(), 
+                name.get(),
+                postalCode.get(),
                 pageRequest
             );
         } else if (name.isPresent()) {
             // Nur Name-Filter
             entityPage = repository.findByNameContainingIgnoreCase(
-                name.get(), 
+                name.get(),
                 pageRequest
             );
         } else if (postalCode.isPresent()) {
             // Nur PLZ-Filter
             entityPage = repository.findByZipCode(
-                postalCode.get(), 
+                postalCode.get(),
                 pageRequest
             );
         } else {
             // Keine Filter
             entityPage = repository.findAll(pageRequest);
         }
-        
+
         // Entity → Domain Konvertierung
         List<City> cities = mapper.toDomainList(entityPage.getContent());
-        
+
         // Spring Data Page → Domain Page
         return new Page<>(
             cities,
@@ -1568,13 +1568,13 @@ public class CityPersistenceAdapter implements CityOutgoingPort {
             entityPage.getTotalPages()
         );
     }
-    
+
     @Override
     public Optional<City> findById(UUID id) {
         return repository.findById(id)
                 .map(mapper::toDomain);  // Entity → Domain
     }
-    
+
     @Override
     public boolean existsById(UUID id) {
         return repository.existsById(id);
@@ -1603,41 +1603,41 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class PracticePersistenceAdapter implements PracticeOutgoingPort {
-    
+
     private final PracticeJpaRepository repository;
     private final PracticeEntityMapper mapper;
-    
+
     @Override
     public Practice save(Practice practice) {
         // Domain → Entity
         PracticeEntity entity = mapper.toEntity(practice);
-        
+
         // In DB speichern (INSERT oder UPDATE)
         PracticeEntity savedEntity = repository.save(entity);
-        
+
         // Entity → Domain
         return mapper.toDomain(savedEntity);
     }
-    
+
     @Override
     public Optional<Practice> findById(UUID id) {
         return repository.findById(id)
                 .map(mapper::toDomain);
     }
-    
+
     @Override
     public Optional<Practice> findByName(String name) {
         return repository.findByName(name)
                 .map(mapper::toDomain);
     }
-    
+
     @Override
     public Page<Practice> findByCity(UUID cityId, int page, int size) {
         PageRequest pageRequest = PageRequest.of(page, size);
-        
-        org.springframework.data.domain.Page<PracticeEntity> entityPage = 
+
+        org.springframework.data.domain.Page<PracticeEntity> entityPage =
             repository.findByCity_Id(cityId, pageRequest);
-        
+
         return new Page<>(
             mapper.toDomainList(entityPage.getContent()),
             entityPage.getNumber(),
@@ -1646,12 +1646,12 @@ public class PracticePersistenceAdapter implements PracticeOutgoingPort {
             entityPage.getTotalPages()
         );
     }
-    
+
     @Override
     public void deleteById(UUID id) {
         repository.deleteById(id);
     }
-    
+
     @Override
     public boolean existsById(UUID id) {
         return repository.existsById(id);
@@ -1778,33 +1778,33 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PracticeEntity {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-    
+
     @Column(name = "name", nullable = false)
     private String name;
-    
+
     @Column(name = "street", nullable = false)
     private String street;
-    
+
     @Column(name = "house_number", nullable = false)
     private String houseNumber;
-    
+
     @Column(name = "phone", nullable = false)
     private String phone;
-    
+
     @Column(name = "email", nullable = false)
     private String email;
-    
+
     @Column(name = "postal_code", nullable = false)
     private String postalCode;
-    
+
     /**
      * ⚠️ WICHTIG: Im Entity ist das ein Objekt (CityEntity)
      * Im Domain-Modell ist das nur eine UUID (cityId)
-     * 
+     *
      * Mapper muss zwischen beiden konvertieren!
      */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -1838,7 +1838,7 @@ private CityEntity city;
 PracticeEntity practice = practiceRepository.findById(id);
 // Hier ist city NOCH NICHT geladen! ❌
 
-String cityName = practice.getCity().getName(); 
+String cityName = practice.getCity().getName();
 // JETZT wird city geladen! ✅ (Extra DB-Query)
 ```
 
@@ -1870,16 +1870,16 @@ private CityEntity city;
 PracticeEntity practice = practiceRepository.findById(id);
 // Hier ist city BEREITS geladen! ✅ (Ein einziger DB-Query mit JOIN)
 
-String cityName = practice.getCity().getName(); 
+String cityName = practice.getCity().getName();
 // Keine weitere DB-Abfrage nötig
 ```
 
 **SQL:**
 ```sql
 -- Nur EINE Query mit JOIN
-SELECT p.*, c.* 
-FROM practice p 
-JOIN city c ON p.city_id = c.id 
+SELECT p.*, c.*
+FROM practice p
+JOIN city c ON p.city_id = c.id
 WHERE p.id = '...'
 ```
 
@@ -1902,14 +1902,14 @@ Wenn du **manchmal** die City brauchst (aber nicht immer), verwende `LAZY` + **g
 
 ```java
 public interface PracticeRepository extends JpaRepository<PracticeEntity, UUID> {
-    
+
     // LAZY: Lädt nur Practice (ohne City)
     Optional<PracticeEntity> findById(UUID id);
-    
+
     // EAGER: Lädt Practice MIT City in EINER Query
     @Query("SELECT p FROM PracticeEntity p JOIN FETCH p.city WHERE p.id = :id")
     Optional<PracticeEntity> findByIdWithCity(@Param("id") UUID id);
-    
+
     // EAGER: Lädt alle Practices MIT City
     @Query("SELECT p FROM PracticeEntity p JOIN FETCH p.city")
     List<PracticeEntity> findAllWithCity();
@@ -1959,21 +1959,21 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface PracticeEntityMapper {
-    
+
     /**
      * Domain → Entity
      * cityId (UUID) → city.id (CityEntity.id)
      */
     @Mapping(source = "cityId", target = "city.id")
     PracticeEntity toEntity(Practice practice);
-    
+
     /**
      * Entity → Domain
      * city.id → cityId
      */
     @Mapping(source = "city.id", target = "cityId")
     Practice toDomain(PracticeEntity entity);
-    
+
     List<Practice> toDomainList(List<PracticeEntity> entities);
 }
 ```
@@ -2021,17 +2021,17 @@ import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
 public interface DoctorEntityMapper {
-    
+
     @Mapping(source = "practiceId", target = "practice.id")
     @Mapping(source = "specialityIds", target = "specialities", qualifiedByName = "idsToEntities")
     DoctorEntity toEntity(Doctor doctor);
-    
+
     @Mapping(source = "practice.id", target = "practiceId")
     @Mapping(source = "specialities", target = "specialityIds", qualifiedByName = "entitiesToIds")
     Doctor toDomain(DoctorEntity entity);
-    
+
     List<Doctor> toDomainList(List<DoctorEntity> entities);
-    
+
     /**
      * Custom Mapping: Set<UUID> → Set<SpecialityEntity>
      */
@@ -2048,7 +2048,7 @@ public interface DoctorEntityMapper {
                 })
                 .collect(Collectors.toSet());
     }
-    
+
     /**
      * Custom Mapping: Set<SpecialityEntity> → Set<UUID>
      */
@@ -2107,10 +2107,10 @@ import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface SlotEntityMapper {
-    
+
     /**
      * Domain → Entity
-     * 
+     *
      * WICHTIG:
      * - workingHoursId → workingHours.id
      * - ZonedDateTime wird automatisch gemappt
@@ -2118,13 +2118,13 @@ public interface SlotEntityMapper {
      */
     @Mapping(source = "workingHoursId", target = "workingHours.id")
     SlotEntity toEntity(Slot slot);
-    
+
     /**
      * Entity → Domain
      */
     @Mapping(source = "workingHours.id", target = "workingHoursId")
     Slot toDomain(SlotEntity entity);
-    
+
     List<Slot> toDomainList(List<SlotEntity> entities);
     List<SlotEntity> toEntityList(List<Slot> slots);
 }
@@ -2199,12 +2199,12 @@ Page<PracticeEntity> findByCity_Id(UUID cityId, Pageable pageable);
 @Service
 @Transactional
 public class PracticeService {
-    
+
     @Transactional(readOnly = true)  // ← Performance-Optimierung für Lese-Operationen
     public Page<Practice> getAllPractices(...) {
         // ...
     }
-    
+
     @Transactional  // ← Schreib-Transaktion
     public Practice createPractice(Practice practice) {
         // Validierung...
@@ -2260,22 +2260,22 @@ public Optional<City> findById(UUID id) {
 ```java
 @DataJpaTest
 class CityJpaRepositoryTest {
-    
+
     @Autowired
     private CityJpaRepository repository;
-    
+
     @Test
     void testFindByName() {
         CityEntity city = new CityEntity();
         city.setName("Köln");
         city.setZipCode("50667");
         repository.save(city);
-        
+
         Page<CityEntity> result = repository.findByNameContainingIgnoreCase(
-            "köln", 
+            "köln",
             PageRequest.of(0, 10)
         );
-        
+
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).getName()).isEqualTo("Köln");
     }
@@ -2307,14 +2307,14 @@ class CityJpaRepositoryTest {
 
 ### 10.3 Wichtige Punkte
 
-✅ **Domain-Modell** kennt KEINE Datenbank  
-✅ **JPA-Entity** kennt KEINE Business-Logik  
-✅ **Mapper** konvertiert zwischen beiden  
-✅ **Persistence-Adapter** ist die einzige Verbindung zur DB  
-✅ **Repository** nutzt Spring Data JPA (wenig Code!)  
-✅ **Lazy Loading** als Standard verwenden  
-✅ **JOIN FETCH** für N+1 Problem  
-✅ **Paginierung** immer verwenden  
+✅ **Domain-Modell** kennt KEINE Datenbank
+✅ **JPA-Entity** kennt KEINE Business-Logik
+✅ **Mapper** konvertiert zwischen beiden
+✅ **Persistence-Adapter** ist die einzige Verbindung zur DB
+✅ **Repository** nutzt Spring Data JPA (wenig Code!)
+✅ **Lazy Loading** als Standard verwenden
+✅ **JOIN FETCH** für N+1 Problem
+✅ **Paginierung** immer verwenden
 
 ---
 
