@@ -46,14 +46,14 @@
 
 ### 2.1 Vorteile
 
-| Feature | Vorteil |
-|---------|---------|
-| **Asynchronität** | Buchung blockiert nicht auf E-Mail-Versand |
-| **Entkopplung** | Services kennen sich nicht direkt |
+|      Feature       |                    Vorteil                     |
+|--------------------|------------------------------------------------|
+| **Asynchronität**  | Buchung blockiert nicht auf E-Mail-Versand     |
+| **Entkopplung**    | Services kennen sich nicht direkt              |
 | **Skalierbarkeit** | E-Mail-Service kann unabhängig skaliert werden |
-| **Fehlertoleranz** | Events bleiben erhalten bei Service-Ausfall |
-| **Replay** | Events können wiederholt werden |
-| **Monitoring** | Kafka bietet Metriken und Monitoring |
+| **Fehlertoleranz** | Events bleiben erhalten bei Service-Ausfall    |
+| **Replay**         | Events können wiederholt werden                |
+| **Monitoring**     | Kafka bietet Metriken und Monitoring           |
 
 ### 2.2 Kafka-Konzepte
 
@@ -914,11 +914,13 @@ curl -X POST http://localhost:8081/api/v1/bookings \
 ### 8.3 Kafka-Events prüfen
 
 **Kafka UI öffnen:**
+
 ```bash
 open http://localhost:8090
 ```
 
 **Kafka CLI:**
+
 ```bash
 # Topic erstellen
 docker exec -it kafka kafka-topics --create \
@@ -1034,6 +1036,7 @@ management:
 ```
 
 Metriken abrufen:
+
 ```bash
 curl http://localhost:8082/actuator/metrics/kafka.consumer.records.consumed.total
 ```
@@ -1129,6 +1132,7 @@ public class AuthController {
 Du hast Recht – die `practice`-Tabelle sollte eine Hausnummer haben!
 
 **Migration:**
+
 ```sql
 ALTER TABLE practice 
 ADD COLUMN house_number VARCHAR(20) NOT NULL DEFAULT '0';
@@ -1138,6 +1142,7 @@ CREATE INDEX idx_practice_address ON practice(street, house_number, city_id);
 ```
 
 **Entity anpassen:**
+
 ```java
 @Entity
 @Table(name = "practice")
@@ -1172,6 +1177,7 @@ CREATE TABLE doctor_specialty (
 ```
 
 **Entity:**
+
 ```java
 @Entity
 @Table(name = "doctor_specialty")
@@ -1259,12 +1265,10 @@ CREATE TABLE doctor_specialty (
    - Ein Arzt hat mehrere Arbeitszeiten (Mo-Fr, unterschiedliche Zeiten)
    - Foreign Key: `doctor_working_hours.doctor_id → doctor.id`
    - Cascade DELETE: Arzt gelöscht → Arbeitszeiten gelöscht
-
 2. **doctor → slot (1:n)**
    - Ein Arzt hat viele konkrete Termin-Slots
    - Foreign Key: `slot.doctor_id → doctor.id`
    - Cascade DELETE: Arzt gelöscht → Slots gelöscht
-
 3. **doctor_working_hours → slot (Generierung)**
    - Slots werden aus Arbeitszeiten generiert
    - Ein Slot ist nur gültig, wenn er in den Arbeitszeiten liegt
@@ -1273,6 +1277,7 @@ CREATE TABLE doctor_specialty (
 ### Beispiel
 
 **doctor_working_hours:**
+
 ```
 doctor_id | weekday | start_time | end_time
 ----------|---------|------------|----------
@@ -1281,6 +1286,7 @@ doctor_id | weekday | start_time | end_time
 ```
 
 **Generierte Slots (für Montag 20.01.2026):**
+
 ```
 doctor_id | start_time          | end_time            | status
 ----------|---------------------|---------------------|-------
@@ -1324,13 +1330,13 @@ ADD CONSTRAINT check_slot_time_order
 
 ### Vorteile
 
-| Aspekt | Vorteil |
-|--------|---------|
-| **Skalierung** | E-Mail-Service unabhängig skalierbar |
-| **Fehlertoleranz** | Events bleiben bei Service-Ausfall erhalten |
-| **Entkopplung** | Services kennen sich nicht direkt |
-| **Asynchronität** | Buchung blockiert nicht auf E-Mail |
-| **Erweiterbarkeit** | Neue Event-Typen einfach hinzufügbar |
+|       Aspekt        |                   Vorteil                   |
+|---------------------|---------------------------------------------|
+| **Skalierung**      | E-Mail-Service unabhängig skalierbar        |
+| **Fehlertoleranz**  | Events bleiben bei Service-Ausfall erhalten |
+| **Entkopplung**     | Services kennen sich nicht direkt           |
+| **Asynchronität**   | Buchung blockiert nicht auf E-Mail          |
+| **Erweiterbarkeit** | Neue Event-Typen einfach hinzufügbar        |
 
 ### Aufwand
 

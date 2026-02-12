@@ -31,18 +31,20 @@ Er kennt **keine Patienten** und verarbeitet **keine Buchungen**.
 ### 2.1 Tabelle `city`
 
 #### Fachliche Bedeutung
+
 Repräsentiert eine Stadt, in der sich Arztpraxen befinden.
 Sie dient als Filterkriterium für die Arztsuche.
 
 #### Technische Erklärung
 
-| Attribut | Typ | Erklärung |
-|--------|----|----------|
-| id | BIGINT | Eindeutiger technischer Schlüssel |
-| name | VARCHAR(255) | Name der Stadt (z. B. „Berlin“) |
-| zip_code | VARCHAR(20) | Postleitzahl, String wegen führender Nullen |
+| Attribut |     Typ      |                  Erklärung                  |
+|----------|--------------|---------------------------------------------|
+| id       | BIGINT       | Eindeutiger technischer Schlüssel           |
+| name     | VARCHAR(255) | Name der Stadt (z. B. „Berlin“)             |
+| zip_code | VARCHAR(20)  | Postleitzahl, String wegen führender Nullen |
 
 #### Beziehungen
+
 - Eine Stadt kann **mehrere Praxen** haben
 - Beziehung: `city (1) → practice (n)`
 
@@ -51,6 +53,7 @@ Sie dient als Filterkriterium für die Arztsuche.
 ### 2.2 Tabelle `specialty`
 
 #### Fachliche Bedeutung
+
 Beschreibt eine medizinische Fachrichtung wie:
 - Kardiologie
 - Dermatologie
@@ -58,12 +61,13 @@ Beschreibt eine medizinische Fachrichtung wie:
 
 #### Technische Erklärung
 
-| Attribut | Typ | Erklärung |
-|--------|----|----------|
-| id | BIGINT | Primärschlüssel |
-| name | VARCHAR(255) | Name der Fachrichtung |
+| Attribut |     Typ      |       Erklärung       |
+|----------|--------------|-----------------------|
+| id       | BIGINT       | Primärschlüssel       |
+| name     | VARCHAR(255) | Name der Fachrichtung |
 
 #### Beziehungen
+
 - Ärzte können **mehrere Fachrichtungen** haben
 - Beziehung über Join-Tabelle `doctor_specialty`
 
@@ -72,25 +76,28 @@ Beschreibt eine medizinische Fachrichtung wie:
 ### 2.3 Tabelle `practice`
 
 #### Fachliche Bedeutung
+
 Eine Praxis ist der physische Ort, an dem Ärzte arbeiten.
 Mehrere Ärzte können in einer Praxis tätig sein.
 
 #### Technische Erklärung
 
-| Attribut | Typ | Erklärung |
-|--------|----|----------|
-| id | BIGINT | Primärschlüssel |
-| name | VARCHAR(255) | Name der Praxis |
-| street | VARCHAR(255) | Straßenname (z. B. „Hauptstraße") |
-| house_number | VARCHAR(20) | Hausnummer inkl. Zusätze (z. B. „42a", „15-17") |
-| phone | VARCHAR(50) | Telefonnummer |
-| city_id | BIGINT | Verweis auf Stadt |
+|   Attribut   |     Typ      |                    Erklärung                    |
+|--------------|--------------|-------------------------------------------------|
+| id           | BIGINT       | Primärschlüssel                                 |
+| name         | VARCHAR(255) | Name der Praxis                                 |
+| street       | VARCHAR(255) | Straßenname (z. B. „Hauptstraße")               |
+| house_number | VARCHAR(20)  | Hausnummer inkl. Zusätze (z. B. „42a", „15-17") |
+| phone        | VARCHAR(50)  | Telefonnummer                                   |
+| city_id      | BIGINT       | Verweis auf Stadt                               |
 
 #### Beziehungen
+
 - Eine Praxis gehört **genau zu einer Stadt**
 - Eine Praxis hat **mehrere Ärzte**
 
 #### Adressaufbau
+
 Die vollständige Adresse setzt sich zusammen aus:
 - Straße + Hausnummer (z. B. „Hauptstraße 42a")
 - PLZ + Stadt (aus verknüpfter `city`-Tabelle)
@@ -100,18 +107,20 @@ Die vollständige Adresse setzt sich zusammen aus:
 ### 2.4 Tabelle `doctor`
 
 #### Fachliche Bedeutung
+
 Repräsentiert einen einzelnen Arzt, der Termine anbietet.
 
 #### Technische Erklärung
 
-| Attribut | Typ | Erklärung |
-|--------|----|----------|
-| id | BIGINT | Primärschlüssel |
-| first_name | VARCHAR(255) | Vorname |
-| last_name | VARCHAR(255) | Nachname |
-| practice_id | BIGINT | Zugehörige Praxis |
+|  Attribut   |     Typ      |     Erklärung     |
+|-------------|--------------|-------------------|
+| id          | BIGINT       | Primärschlüssel   |
+| first_name  | VARCHAR(255) | Vorname           |
+| last_name   | VARCHAR(255) | Nachname          |
+| practice_id | BIGINT       | Zugehörige Praxis |
 
 #### Beziehungen
+
 - Arzt → Praxis (n:1)
 - Arzt → Fachrichtungen (n:m)
 - Arzt → Arbeitszeiten (1:n)
@@ -122,17 +131,19 @@ Repräsentiert einen einzelnen Arzt, der Termine anbietet.
 ### 2.5 Tabelle `doctor_specialty`
 
 #### Fachliche Bedeutung
+
 Verknüpft Ärzte mit ihren Fachrichtungen.
 Ein Arzt kann mehrere Spezialisierungen haben.
 
 #### Technische Erklärung
 
-| Attribut | Typ | Erklärung |
-|--------|----|----------|
-| doctor_id | BIGINT | Referenz auf Arzt |
+|   Attribut   |  Typ   |         Erklärung         |
+|--------------|--------|---------------------------|
+| doctor_id    | BIGINT | Referenz auf Arzt         |
 | specialty_id | BIGINT | Referenz auf Fachrichtung |
 
 #### Beziehungen
+
 - n:m Beziehung zwischen Arzt und Fachrichtung
 - Keine eigene ID nötig (Composite Key)
 
@@ -141,20 +152,22 @@ Ein Arzt kann mehrere Spezialisierungen haben.
 ### 2.6 Tabelle `doctor_working_hours`
 
 #### Fachliche Bedeutung
+
 Definiert, **wann ein Arzt grundsätzlich arbeitet**.
 Diese Daten werden verwendet, um Termin-Slots zu generieren.
 
 #### Technische Erklärung
 
-| Attribut | Typ | Erklärung |
-|--------|----|----------|
-| id | BIGINT | Primärschlüssel |
-| doctor_id | BIGINT | Zugehöriger Arzt |
-| weekday | INT | 1=Montag bis 7=Sonntag |
-| start_time | TIME | Beginn der Arbeit |
-| end_time | TIME | Ende der Arbeit |
+|  Attribut  |  Typ   |       Erklärung        |
+|------------|--------|------------------------|
+| id         | BIGINT | Primärschlüssel        |
+| doctor_id  | BIGINT | Zugehöriger Arzt       |
+| weekday    | INT    | 1=Montag bis 7=Sonntag |
+| start_time | TIME   | Beginn der Arbeit      |
+| end_time   | TIME   | Ende der Arbeit        |
 
 #### Fachliche Logik
+
 - Kein Termin außerhalb dieser Zeiten
 - Grundlage für Slot-Generierung
 
@@ -163,6 +176,7 @@ Diese Daten werden verwendet, um Termin-Slots zu generieren.
 ### 2.7 Tabelle `slot`
 
 #### Fachliche Bedeutung
+
 Ein Slot ist **ein konkreter, buchbarer Termin**.
 Jeder Slot dauert exakt **1 Stunde**.
 
@@ -170,20 +184,22 @@ Slots werden aus den Arbeitszeiten erzeugt.
 
 #### Technische Erklärung
 
-| Attribut | Typ | Erklärung |
-|--------|----|----------|
-| id | BIGINT | Primärschlüssel |
-| doctor_id | BIGINT | Zugehöriger Arzt (FK zu doctor) |
-| start_time | TIMESTAMP | Startzeitpunkt |
-| end_time | TIMESTAMP | Endzeitpunkt |
-| status | VARCHAR(20) | FREE, RESERVED, BOOKED |
+|  Attribut  |     Typ     |            Erklärung            |
+|------------|-------------|---------------------------------|
+| id         | BIGINT      | Primärschlüssel                 |
+| doctor_id  | BIGINT      | Zugehöriger Arzt (FK zu doctor) |
+| start_time | TIMESTAMP   | Startzeitpunkt                  |
+| end_time   | TIMESTAMP   | Endzeitpunkt                    |
+| status     | VARCHAR(20) | FREE, RESERVED, BOOKED          |
 
 #### Beziehungen
+
 - **doctor → slot (1:n)**
 - Ein Arzt hat viele Slots
 - Foreign Key: `doctor_id` → `doctor(id)` mit CASCADE DELETE
 
 #### Fachliche Logik
+
 - FREE → sichtbar & buchbar
 - RESERVED → temporär blockiert (z.B. während Buchungsprozess)
 - BOOKED → final vergeben
@@ -191,6 +207,7 @@ Slots werden aus den Arbeitszeiten erzeugt.
 - Ein Slot wird nur generiert, wenn der Arzt zu dieser Zeit arbeitet
 
 #### Abhängigkeit zwischen Tabellen
+
 ```
 doctor_working_hours (Template)
          ↓ (generiert)
@@ -208,31 +225,30 @@ doctor_working_hours (Template)
 ### Fachliche Beziehungen
 
 ```
-                    ┌─────────────────┐
-                    │     doctor      │
-                    │   (1 Arzt)      │
-                    └────────┬────────┘
-                             │
-                ┌────────────┴────────────┐
-                │                         │
-                │ 1:n                     │ 1:n
-                │                         │
-                ▼                         ▼
-    ┌───────────────────────┐   ┌──────────────────┐
-    │ doctor_working_hours  │   │      slot        │
-    │   (Arbeitszeiten)     │   │  (Buchbare       │
-    │                       │   │   Termine)       │
-    │ - Wochentag           │   │                  │
-    │ - Start/Ende (Zeit)   │   │ - Start/Ende     │
-    │                       │   │   (Timestamp)    │
-    │ TEMPLATE-Daten        │   │ - Status         │
-    └───────────────────────┘   │                  │
-                │               │ KONKRETE Daten   │
-                │               └──────────────────┘
-                │
-                └───────► (generiert) ───────►
+                ┌─────────────────┐
+                │     doctor      │
+                │   (1 Arzt)      │
+                └────────┬────────┘
+                         │
+            ┌────────────┴────────────┐
+            │                         │
+            │ 1:n                     │ 1:n
+            │                         │
+            ▼                         ▼
+┌───────────────────────┐   ┌──────────────────┐
+│ doctor_working_hours  │   │      slot        │
+│   (Arbeitszeiten)     │   │  (Buchbare       │
+│                       │   │   Termine)       │
+│ - Wochentag           │   │                  │
+│ - Start/Ende (Zeit)   │   │ - Start/Ende     │
+│                       │   │   (Timestamp)    │
+│ TEMPLATE-Daten        │   │ - Status         │
+└───────────────────────┘   │                  │
+            │               │ KONKRETE Daten   │
+            │               └──────────────────┘
+            │
+            └───────► (generiert) ───────►
 ```
-
 
 ## 3. Consumer-Service – Datenbank & Domänenmodell
 
@@ -244,22 +260,22 @@ Er kennt keine Details über Praxen oder Arbeitszeiten.
 ### 3.1 Tabelle `patient`
 
 #### Fachliche Bedeutung
+
 Patientendatensatz für Authentifizierung und Buchungsverwaltung.
-
-
 
 #### Technische Erklärung
 
-| Attribut | Typ | Erklärung |
-|--------|----|----------|
-| id | BIGINT | Primärschlüssel |
-| email | VARCHAR(255) | E-Mail-Adresse (UNIQUE) |
-| first_name | VARCHAR(255) | Vorname |
-| last_name | VARCHAR(255) | Nachname |
+|   Attribut    |     Typ      |          Erklärung          |
+|---------------|--------------|-----------------------------|
+| id            | BIGINT       | Primärschlüssel             |
+| email         | VARCHAR(255) | E-Mail-Adresse (UNIQUE)     |
+| first_name    | VARCHAR(255) | Vorname                     |
+| last_name     | VARCHAR(255) | Nachname                    |
 | password_hash | VARCHAR(255) | Gehashtes Passwort (BCrypt) |
-| created_at | TIMESTAMP | Zeitpunkt der Registrierung |
+| created_at    | TIMESTAMP    | Zeitpunkt der Registrierung |
 
 #### Beziehungen
+
 - Ein Patient kann **mehrere Buchungen** haben
 - Beziehung: `patient (1) → booking (n)`
 
@@ -268,25 +284,28 @@ Patientendatensatz für Authentifizierung und Buchungsverwaltung.
 ### 3.2 Tabelle `booking`
 
 #### Fachliche Bedeutung
+
 Repräsentiert eine Terminbuchung eines Patienten.
 
 #### Technische Erklärung
 
-| Attribut | Typ | Erklärung |
-|--------|----|----------|
-| id | BIGINT | Primärschlüssel |
-| patient_id | BIGINT | Buchender Patient (FK zu patient) |
-| doctor_id | BIGINT | Arzt-ID aus Provider-Service |
-| slot_id | BIGINT | Slot-ID aus Provider-Service |
-| status | VARCHAR(30) | INITIATED, CONFIRMED, CANCELLED |
-| created_at | TIMESTAMP | Buchungszeitpunkt |
+|  Attribut  |     Typ     |             Erklärung             |
+|------------|-------------|-----------------------------------|
+| id         | BIGINT      | Primärschlüssel                   |
+| patient_id | BIGINT      | Buchender Patient (FK zu patient) |
+| doctor_id  | BIGINT      | Arzt-ID aus Provider-Service      |
+| slot_id    | BIGINT      | Slot-ID aus Provider-Service      |
+| status     | VARCHAR(30) | INITIATED, CONFIRMED, CANCELLED   |
+| created_at | TIMESTAMP   | Buchungszeitpunkt                 |
 
 #### Fachliche Logik
+
 - INITIATED → Prozess gestartet
 - CONFIRMED → Slot gebucht, Bestätigung versendet
 - CANCELLED → Buchung abgebrochen
 
 #### Hinweis zur Microservice-Architektur
+
 `doctor_id` und `slot_id` sind **externe Referenzen** auf Entities im Provider-Service.
 Es gibt **keine Foreign Key Constraints** über Service-Grenzen hinweg.
 Die Datenkonsistenz wird auf Anwendungsebene sichergestellt.
@@ -296,31 +315,35 @@ Die Datenkonsistenz wird auf Anwendungsebene sichergestellt.
 ### 3.3 Tabelle `email_log` (optional)
 
 #### Fachliche Bedeutung
-Protokolliert versendete Bestätigungs-E-Mails für Nachvollziehbarkeit, 
+
+Protokolliert versendete Bestätigungs-E-Mails für Nachvollziehbarkeit,
 Debugging und Compliance.
 
 #### Technische Erklärung
 
-| Attribut | Typ | Erklärung |
-|--------|----|----------|
-| id | BIGINT | Primärschlüssel |
-| booking_id | BIGINT | Zugehörige Buchung (FK zu booking) |
-| recipient_email | VARCHAR(255) | Empfänger-Adresse |
-| subject | VARCHAR(500) | E-Mail-Betreff |
-| sent_at | TIMESTAMP | Versandzeit (DEFAULT CURRENT_TIMESTAMP) |
-| status | VARCHAR(50) | SENT, FAILED oder PENDING |
-| error_message | TEXT | Fehlermeldung bei Versandproblemen |
+|    Attribut     |     Typ      |                Erklärung                |
+|-----------------|--------------|-----------------------------------------|
+| id              | BIGINT       | Primärschlüssel                         |
+| booking_id      | BIGINT       | Zugehörige Buchung (FK zu booking)      |
+| recipient_email | VARCHAR(255) | Empfänger-Adresse                       |
+| subject         | VARCHAR(500) | E-Mail-Betreff                          |
+| sent_at         | TIMESTAMP    | Versandzeit (DEFAULT CURRENT_TIMESTAMP) |
+| status          | VARCHAR(50)  | SENT, FAILED oder PENDING               |
+| error_message   | TEXT         | Fehlermeldung bei Versandproblemen      |
 
 #### Beziehungen
+
 - `booking_id` → Foreign Key zu `booking(id)` mit CASCADE DELETE
 - Bei Löschung einer Buchung werden zugehörige E-Mail-Logs mit gelöscht
 
 #### Fachliche Logik
+
 - **PENDING**: E-Mail-Versand wird vorbereitet
 - **SENT**: E-Mail erfolgreich versendet
 - **FAILED**: Versand fehlgeschlagen (Grund in `error_message`)
 
 #### Indizes für Performance
+
 ```sql
 CREATE INDEX idx_email_log_booking ON email_log(booking_id);
 CREATE INDEX idx_email_log_status ON email_log(status);
@@ -343,6 +366,7 @@ Dieses System implementiert eine **einfache JWT-basierte Authentifizierung** ohn
 - 📖 Siehe `Email_Service_With_Kafka.md` für produktionsreife Kafka-Architektur
 
 #### Warum keine E-Mail-Verifikation in diesem Testprojekt?
+
 1. Fokus liegt auf Terminbuchungs-Logik
 2. Vereinfachter Test-Workflow (keine E-Mail-Bestätigung nötig)
 3. Schnellere lokale Entwicklung
@@ -351,6 +375,7 @@ Dieses System implementiert eine **einfache JWT-basierte Authentifizierung** ohn
 #### API-Endpoints
 
 **Registrierung:**
+
 ```
 POST /api/v1/auth/register
 
@@ -370,6 +395,7 @@ Response (201 Created):
 ```
 
 **Login:**
+
 ```
 POST /api/v1/auth/login
 
@@ -388,6 +414,7 @@ Response (200 OK):
 ```
 
 **Geschützte Endpoints:**
+
 ```
 GET /api/v1/patient/bookings
 Header: Authorization: Bearer {token}
@@ -406,12 +433,14 @@ Response (200 OK):
 ### 4.2 Technische Umsetzung
 
 #### Komponenten:
+
 - **Spring Security**: Basis-Framework für Authentifizierung
 - **JWT (JSON Web Token)**: Stateless Token für API-Zugriff
 - **BCrypt**: Password-Hashing-Algorithmus
 - **Filter Chain**: JWT-Validierung bei jedem Request
 
 #### Ablauf:
+
 1. Patient registriert sich → Passwort wird gehasht und gespeichert
 2. Patient meldet sich an → Credentials werden geprüft, JWT wird generiert
 3. Patient sendet Anfragen → JWT wird validiert, User-ID wird extrahiert
@@ -450,6 +479,7 @@ Für Produktionssysteme gibt es zwei Hauptansätze zur E-Mail-Verifikation:
 - ❌ Anfällig für Phishing (Link kann gefälscht werden)
 
 **Implementierung:**
+
 ```
 E-Mail enthält: https://app.com/verify?token=abc123xyz
 ```
@@ -466,12 +496,14 @@ E-Mail enthält: https://app.com/verify?token=abc123xyz
 - ❌ Zusätzlicher Eingabeschritt
 
 **Implementierung:**
+
 ```
 E-Mail enthält: Ihr Verifizierungscode: 492837
 Benutzer gibt Code in App ein
 ```
 
 **Datenbank-Anpassung für Code-Verifikation:**
+
 ```sql
 ALTER TABLE patient 
 ADD COLUMN email_verified BOOLEAN NOT NULL DEFAULT FALSE,
@@ -494,6 +526,7 @@ CREATE INDEX idx_patient_verification_code ON patient(verification_code);
 ### 4.5 Datenbank-Migration
 
 **SQL-Script für Patient-Authentifizierung:**
+
 ```sql
 -- Spalte für Passwort hinzufügen
 ALTER TABLE patient ADD COLUMN password_hash VARCHAR(255) NOT NULL;
@@ -503,3 +536,4 @@ CREATE UNIQUE INDEX idx_patient_email ON patient(email);
 ```
 
 ---
+

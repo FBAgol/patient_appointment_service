@@ -1,12 +1,13 @@
 package test.doctor_provider.infrastructure.adapter.outgoing.persistence.entity;
 
+import java.util.UUID;
+
 import jakarta.persistence.*;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.UUID;
 
 @Entity
 @Table(name = "city")
@@ -16,16 +17,15 @@ import java.util.UUID;
 @NoArgsConstructor
 
 public class CityEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", updatable = false, nullable = false)
-    private UUID id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.UUID)
+	@Column(name = "id", updatable = false, nullable = false)
+	private UUID id;
 
-    @Column(name = "name", nullable = false, length = 100)
-    private String name;
+	@Column(name = "name", nullable = false, length = 100)
+	private String name;
 
-    @Column(name = "zip_code", nullable = false, length = 20)
-    private String postalCode; // PLZ (mapped zu zip_code in DB)
-
+	@Column(name = "zip_code", nullable = false, length = 20)
+	private String postalCode; // PLZ (mapped zu zip_code in DB)
 
 }

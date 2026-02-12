@@ -38,6 +38,7 @@ git commit -m "feat: add entities"
 4. ✅ Commit durchgeführt
 
 **Du siehst:**
+
 ```
 🎨 Spotless: Code wird formatiert...
 ✅ Code erfolgreich formatiert!
@@ -193,11 +194,13 @@ chmod +x .git/hooks/pre-commit
 ### **Problem: "Hook funktioniert nicht"**
 
 **Prüfen, ob Hook existiert:**
+
 ```bash
 ls -la .git/hooks/pre-commit
 ```
 
 **Ausgabe sollte sein:**
+
 ```
 -rwxr-xr-x  1 user staff 256 Feb 12 10:00 .git/hooks/pre-commit
            ^^^
@@ -205,6 +208,7 @@ ls -la .git/hooks/pre-commit
 ```
 
 **Neu einrichten:**
+
 ```bash
 ./setup-git-hooks.sh
 ```
@@ -214,11 +218,13 @@ ls -la .git/hooks/pre-commit
 ### **Problem: "mvn: command not found"**
 
 **Maven installieren:**
+
 ```bash
 brew install maven  # macOS
 ```
 
 **Oder Hook temporär überspringen:**
+
 ```bash
 git commit --no-verify -m "message"
 ```
@@ -230,6 +236,7 @@ git commit --no-verify -m "message"
 ### **Pre-Commit weniger verbos:**
 
 Editiere `.git/hooks/pre-commit`:
+
 ```bash
 # Vorher:
 mvn spotless:apply -q
@@ -243,6 +250,7 @@ mvn spotless:apply -q > /dev/null 2>&1
 ### **Nur bestimmte Dateien formatieren:**
 
 Editiere `.git/hooks/pre-commit`:
+
 ```bash
 #!/bin/bash
 
@@ -262,10 +270,10 @@ exit 0
 
 ## 📊 Warum nur Pre-Commit (kein Pre-Push)?
 
-| Hook | Wann | Vorteil | Nachteil |
-|------|------|---------|----------|
-| **Pre-Commit** | Bei `git commit` | ✅ Frühe Formatierung<br>✅ Schnell<br>✅ Lokal | - |
-| **Pre-Push** | Bei `git push` | Weniger häufig | ❌ Zu spät (Code schon committed)<br>❌ Langsamer |
+|      Hook      |       Wann       |                   Vorteil                    |                    Nachteil                     |
+|----------------|------------------|----------------------------------------------|-------------------------------------------------|
+| **Pre-Commit** | Bei `git commit` | ✅ Frühe Formatierung<br>✅ Schnell<br>✅ Lokal | -                                               |
+| **Pre-Push**   | Bei `git push`   | Weniger häufig                               | ❌ Zu spät (Code schon committed)<br>❌ Langsamer |
 
 **Fazit:** Pre-Commit reicht völlig aus! ✅
 
@@ -287,6 +295,7 @@ git clone <repo>
 ```
 
 **Alternative:** `husky` (npm) für automatisches Setup
+
 ```bash
 # Für JavaScript/TypeScript-Projekte
 npm install --save-dev husky
@@ -299,14 +308,17 @@ npm install --save-dev husky
 ## 🎉 Zusammenfassung
 
 ### **Einmalig ausführen:**
+
 ```bash
 ./setup-git-hooks.sh
 ```
 
 ### **Dann passiert automatisch:**
+
 - ✅ **git commit** → Code wird formatiert
 
 ### **Gültig für:**
+
 - ✅ NUR dieses Projekt (`doctor-provider`)
 - ❌ NICHT für andere Projekte
 
@@ -319,5 +331,4 @@ npm install --save-dev husky
 - [Git Hooks Dokumentation](https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks)
 - [SPOTLESS_GUIDE.md](./SPOTLESS_GUIDE.md)
 - [README.md](./README.md)
-
 

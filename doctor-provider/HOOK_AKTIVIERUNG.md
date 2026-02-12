@@ -34,6 +34,7 @@ chmod +x aktiviere-git-hook.sh
 ```
 
 **Ausgabe sollte sein:**
+
 ```
 🔧 Aktiviere Git Pre-Commit Hook...
 
@@ -57,6 +58,7 @@ git commit --allow-empty -m "test: hook aktiviert"
 ```
 
 **Du solltest sehen:**
+
 ```
 🎨 Spotless: Code wird formatiert...
 ✅ Code erfolgreich formatiert!
@@ -94,6 +96,7 @@ ls -l .git/hooks/pre-commit
 ```
 
 **Sollte ausgeben:**
+
 ```
 -rwxr-xr-x  1 user staff 500 Feb 12 15:30 .git/hooks/pre-commit
            ^^^
@@ -101,6 +104,7 @@ ls -l .git/hooks/pre-commit
 ```
 
 **Wenn Datei nicht existiert:**
+
 ```
 ls: .git/hooks/pre-commit: No such file or directory
 # ❌ Hook ist NICHT aktiv!
@@ -111,10 +115,10 @@ ls: .git/hooks/pre-commit: No such file or directory
 
 ## 📝 Zusammenfassung
 
-| Situation | Was passiert |
-|-----------|--------------|
+|        Situation         |                                      Was passiert                                      |
+|--------------------------|----------------------------------------------------------------------------------------|
 | **Hook NICHT aktiviert** | ❌ Keine automatische Formatierung<br>❌ Du musst manuell `mvn spotless:apply` ausführen |
-| **Hook aktiviert** | ✅ Automatische Formatierung bei `git commit`<br>✅ Du musst NICHTS machen |
+| **Hook aktiviert**       | ✅ Automatische Formatierung bei `git commit`<br>✅ Du musst NICHTS machen               |
 
 ---
 

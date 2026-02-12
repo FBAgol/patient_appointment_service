@@ -23,6 +23,7 @@
 2. Du solltest im Projekt-Verzeichnis sein
 
 **Oder in macOS Terminal:**
+
 ```bash
 cd /Users/A200151230/Documents/myProjcts/patient_appointment_service/doctor-provider
 ```
@@ -37,6 +38,7 @@ chmod +x aktiviere-git-hook.sh
 ```
 
 **✅ Erwartete Ausgabe:**
+
 ```
 🔧 Aktiviere Git Pre-Commit Hook...
 
@@ -75,6 +77,7 @@ git commit --allow-empty -m "test: hook aktiviert"
 ```
 
 **Du solltest sehen:**
+
 ```
 🎨 Spotless: Code wird formatiert...
 ✅ Code erfolgreich formatiert!
@@ -95,6 +98,7 @@ git commit -m "test: formatierung"
 ```
 
 **Automatisch:**
+
 ```
 🎨 Spotless: Code wird formatiert...
 ✅ Code erfolgreich formatiert!
@@ -149,6 +153,7 @@ ls -la .git/hooks/pre-commit
 ```
 
 **✅ Hook ist AKTIV:**
+
 ```
 -rwxr-xr-x  1 user staff 500 Feb 12 15:30 .git/hooks/pre-commit
            ^^^
@@ -156,11 +161,13 @@ ls -la .git/hooks/pre-commit
 ```
 
 **❌ Hook ist NICHT aktiv:**
+
 ```
 ls: .git/hooks/pre-commit: No such file or directory
 ```
 
 **Lösung:**
+
 ```bash
 ./aktiviere-git-hook.sh
 ```
@@ -193,6 +200,7 @@ Bitte Fehler beheben und erneut committen.
 2. Erneut committen
 
 **Notfall (Hook überspringen):**
+
 ```bash
 git commit --no-verify -m "message"
 ```
@@ -241,12 +249,12 @@ mvn spotless:apply
 
 ## 🎯 Zusammenfassung
 
-| Schritt | Befehl | Status |
-|---------|--------|--------|
-| 1. Terminal öffnen | - | ⏸️ |
-| 2. Hook aktivieren | `./aktiviere-git-hook.sh` | ⏸️ |
-| 3. Testen | `git commit --allow-empty -m "test"` | ⏸️ |
-| **Danach** | **Automatische Formatierung!** | ✅ |
+|      Schritt       |                Befehl                | Status |
+|--------------------|--------------------------------------|--------|
+| 1. Terminal öffnen | -                                    | ⏸️     |
+| 2. Hook aktivieren | `./aktiviere-git-hook.sh`            | ⏸️     |
+| 3. Testen          | `git commit --allow-empty -m "test"` | ⏸️     |
+| **Danach**         | **Automatische Formatierung!**       | ✅      |
 
 ---
 

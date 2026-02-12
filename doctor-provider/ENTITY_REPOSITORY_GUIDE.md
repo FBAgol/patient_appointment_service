@@ -1,6 +1,7 @@
 # 🗄️ JPA-Entity & Repository Guide: Hexagonale Architektur
 
 ## 📋 Inhaltsverzeichnis
+
 1. [Konzept-Übersicht](#1-konzept-übersicht)
 2. [JPA-Entities erstellen](#2-jpa-entities-erstellen)
 3. [Spring Data JPA Repositories erstellen](#3-spring-data-jpa-repositories-erstellen)
@@ -59,12 +60,12 @@ In der Hexagonalen Architektur trennen wir die Datenbankschicht vom Domain-Model
 
 ### 1.2 Warum diese Trennung?
 
-| Vorteil | Erklärung |
-|---------|-----------|
-| **Unabhängigkeit** | Domain kennt keine Datenbank-Details |
-| **Testbarkeit** | Domain-Logik ohne DB testbar |
-| **Flexibilität** | DB-Schema kann sich ändern, ohne Domain anzufassen |
-| **Clean Code** | Klare Verantwortlichkeiten |
+|      Vorteil       |                     Erklärung                      |
+|--------------------|----------------------------------------------------|
+| **Unabhängigkeit** | Domain kennt keine Datenbank-Details               |
+| **Testbarkeit**    | Domain-Logik ohne DB testbar                       |
+| **Flexibilität**   | DB-Schema kann sich ändern, ohne Domain anzufassen |
+| **Clean Code**     | Klare Verantwortlichkeiten                         |
 
 ---
 
@@ -186,16 +187,16 @@ public class CityEntity {
 
 #### Erklärung der Annotationen:
 
-| Annotation | Zweck | Beispiel |
-|------------|-------|----------|
-| `@Entity` | Markiert die Klasse als JPA-Entity | `@Entity` |
-| `@Table(name="...")` | DB-Tabellenname | `@Table(name="city")` |
-| `@Id` | Primary Key | `@Id` |
-| `@GeneratedValue` | Auto-generierte ID | `@GeneratedValue(strategy = GenerationType.UUID)` |
-| `@Column(name="...")` | DB-Spaltenname | `@Column(name="zip_code")` |
-| `@Column(nullable=...)` | Pflichtfeld? | `@Column(nullable=false)` |
-| `@Column(length=...)` | Max. Länge (String) | `@Column(length=100)` |
-| `@Column(updatable=...)` | Änderbar? | `@Column(updatable=false)` für ID |
+|        Annotation        |               Zweck                |                     Beispiel                      |
+|--------------------------|------------------------------------|---------------------------------------------------|
+| `@Entity`                | Markiert die Klasse als JPA-Entity | `@Entity`                                         |
+| `@Table(name="...")`     | DB-Tabellenname                    | `@Table(name="city")`                             |
+| `@Id`                    | Primary Key                        | `@Id`                                             |
+| `@GeneratedValue`        | Auto-generierte ID                 | `@GeneratedValue(strategy = GenerationType.UUID)` |
+| `@Column(name="...")`    | DB-Spaltenname                     | `@Column(name="zip_code")`                        |
+| `@Column(nullable=...)`  | Pflichtfeld?                       | `@Column(nullable=false)`                         |
+| `@Column(length=...)`    | Max. Länge (String)                | `@Column(length=100)`                             |
+| `@Column(updatable=...)` | Änderbar?                          | `@Column(updatable=false)` für ID                 |
 
 ---
 
@@ -337,12 +338,13 @@ public class SpecialityEntity {
 
 **Zwei Optionen:**
 
-| EnumType | Speicherung in DB | Beispiel | Empfohlen? |
-|----------|------------------|----------|------------|
-| **`STRING`** ✅ | Enum-Name als String | `"Allgemeinmedizin"` | ✅ **JA** |
-| **`ORDINAL`** ❌ | Position als Zahl | `0`, `1`, `2` | ❌ **NEIN** |
+|    EnumType     |  Speicherung in DB   |       Beispiel       | Empfohlen? |
+|-----------------|----------------------|----------------------|------------|
+| **`STRING`** ✅  | Enum-Name als String | `"Allgemeinmedizin"` | ✅ **JA**   |
+| **`ORDINAL`** ❌ | Position als Zahl    | `0`, `1`, `2`        | ❌ **NEIN** |
 
 **Warum STRING?**
+
 ```java
 // Beispiel: Java Enum
 public enum SpecialityTyp {
@@ -362,6 +364,7 @@ public enum SpecialityTyp {
 ```
 
 **Ohne `@Enumerated`:**
+
 ```java
 // ❌ Fehler: Hibernate weiß nicht, wie es das Enum speichern soll
 @Column(name = "name")
@@ -375,6 +378,7 @@ private SpecialityTyp name;  // Wirft Exception!
 **Zweck:** Teilt Hibernate mit, dass es sich um einen **PostgreSQL NAMED ENUM** handelt.
 
 **Ohne diese Annotation:**
+
 ```java
 // ❌ Nur @Enumerated(EnumType.STRING)
 @Enumerated(EnumType.STRING)
@@ -387,6 +391,7 @@ private SpecialityTyp name;
 ```
 
 **Mit `@JdbcTypeCode`:**
+
 ```java
 // ✅ Hibernate weiß: "Das ist ein PostgreSQL ENUM"
 @Enumerated(EnumType.STRING)
@@ -399,6 +404,7 @@ private SpecialityTyp name;
 ```
 
 **Import erforderlich:**
+
 ```java
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -411,6 +417,7 @@ import org.hibernate.type.SqlTypes;
 **Zweck:** Explizite Angabe des **PostgreSQL-Datenbanktyps**.
 
 **Warum notwendig?**
+
 ```java
 // Ohne columnDefinition:
 @Column(name = "name")
@@ -443,6 +450,7 @@ CREATE TYPE speciality_type AS ENUM (...);
 #### **Variante A: String-basiertes Enum (ohne PostgreSQL ENUM)**
 
 **Migration:**
+
 ```sql
 CREATE TABLE speciality (
     id UUID PRIMARY KEY,
@@ -451,6 +459,7 @@ CREATE TABLE speciality (
 ```
 
 **Entity:**
+
 ```java
 @Entity
 @Table(name = "speciality")
@@ -472,6 +481,7 @@ public class SpecialityEntity {
 #### **Variante B: PostgreSQL ENUM (empfohlen für feste Werte)**
 
 **Migration:**
+
 ```sql
 CREATE TYPE speciality_type AS ENUM ('allgemeinmedizin', 'kardiologe', ...);
 
@@ -482,6 +492,7 @@ CREATE TABLE speciality (
 ```
 
 **Entity:**
+
 ```java
 @Entity
 @Table(name = "speciality")
@@ -503,10 +514,10 @@ public class SpecialityEntity {
 
 ### 🎯 **Zusammenfassung: Wann welche Annotation?**
 
-| Szenario | Annotationen | Beispiel |
-|----------|--------------|----------|
-| **Normales Enum → VARCHAR** | `@Enumerated(EnumType.STRING)` | SlotStatus (AVAILABLE, BOOKED) |
-| **PostgreSQL ENUM** | `@Enumerated(EnumType.STRING)` <br> `@JdbcTypeCode(SqlTypes.NAMED_ENUM)` <br> `columnDefinition = "..."` | SpecialityTyp |
+|          Szenario           |                                               Annotationen                                               |            Beispiel            |
+|-----------------------------|----------------------------------------------------------------------------------------------------------|--------------------------------|
+| **Normales Enum → VARCHAR** | `@Enumerated(EnumType.STRING)`                                                                           | SlotStatus (AVAILABLE, BOOKED) |
+| **PostgreSQL ENUM**         | `@Enumerated(EnumType.STRING)` <br> `@JdbcTypeCode(SqlTypes.NAMED_ENUM)` <br> `columnDefinition = "..."` | SpecialityTyp                  |
 
 ---
 
@@ -598,14 +609,14 @@ public class PracticeEntity {
 
 #### Erklärung der Beziehungs-Annotationen:
 
-| Annotation | Bedeutung | Beispiel |
-|------------|-----------|----------|
-| `@ManyToOne` | Viele → Eine Beziehung | Viele Praxen → Eine Stadt |
-| `@JoinColumn(name="...")` | FK-Spaltenname in DB | `@JoinColumn(name="city_id")` |
-| `fetch = LAZY` | Lazy Loading (erst bei Zugriff laden) | Performance-Optimierung |
-| `fetch = EAGER` | Eager Loading (sofort mitladen) | Bei kleinen Objekten |
-| `optional = false` | Pflichtfeld (NOT NULL) | Stadt ist erforderlich |
-| `optional = true` | Optional (NULL erlaubt) | Feld kann leer sein |
+|        Annotation         |               Bedeutung               |           Beispiel            |
+|---------------------------|---------------------------------------|-------------------------------|
+| `@ManyToOne`              | Viele → Eine Beziehung                | Viele Praxen → Eine Stadt     |
+| `@JoinColumn(name="...")` | FK-Spaltenname in DB                  | `@JoinColumn(name="city_id")` |
+| `fetch = LAZY`            | Lazy Loading (erst bei Zugriff laden) | Performance-Optimierung       |
+| `fetch = EAGER`           | Eager Loading (sofort mitladen)       | Bei kleinen Objekten          |
+| `optional = false`        | Pflichtfeld (NOT NULL)                | Stadt ist erforderlich        |
+| `optional = true`         | Optional (NULL erlaubt)               | Feld kann leer sein           |
 
 ### 2.4 Entity mit n:m Beziehung: DoctorEntity
 
@@ -729,6 +740,7 @@ public class DoctorEntity {
 #### **Fall 1: Einfache n:m Beziehung (NUR FKs in Join-Tabelle)** ✅
 
 **Datenbank:**
+
 ```sql
 CREATE TABLE doctor_speciality (
     doctor_id UUID NOT NULL,
@@ -761,6 +773,7 @@ private Set<SpecialityEntity> specialities = new HashSet<>();
 #### **Fall 2: n:m mit Zusatzfeldern (z.B. Zertifizierungsdatum)** ❌
 
 **Datenbank:**
+
 ```sql
 CREATE TABLE doctor_speciality (
     doctor_id UUID NOT NULL,
@@ -829,10 +842,10 @@ public class DoctorEntity {
 
 ### 🎯 **Entscheidungshilfe:**
 
-| Join-Tabelle enthält... | Lösung | Separate Entity? |
-|-------------------------|--------|------------------|
-| **Nur 2 Fremdschlüssel** (doctor_id, speciality_id) | `@ManyToMany` | ❌ **NEIN** (wie im Beispiel oben) |
-| **2 FKs + zusätzliche Spalten** (certified_since, etc.) | `@OneToMany` + Separate Entity | ✅ **JA** |
+|                 Join-Tabelle enthält...                 |             Lösung             |         Separate Entity?          |
+|---------------------------------------------------------|--------------------------------|-----------------------------------|
+| **Nur 2 Fremdschlüssel** (doctor_id, speciality_id)     | `@ManyToMany`                  | ❌ **NEIN** (wie im Beispiel oben) |
+| **2 FKs + zusätzliche Spalten** (certified_since, etc.) | `@OneToMany` + Separate Entity | ✅ **JA**                          |
 
 ---
 
@@ -935,10 +948,10 @@ public class SlotEntity {
 
 #### Enum-Mapping Vergleich:
 
-| EnumType | DB-Wert | Vorteil | Nachteil |
-|----------|---------|---------|----------|
-| **STRING** | "AVAILABLE" | Lesbar, robust | Mehr Speicher |
-| **ORDINAL** | 0, 1, 2 | Wenig Speicher | Fehleranfällig bei Änderungen |
+|  EnumType   |   DB-Wert   |    Vorteil     |           Nachteil            |
+|-------------|-------------|----------------|-------------------------------|
+| **STRING**  | "AVAILABLE" | Lesbar, robust | Mehr Speicher                 |
+| **ORDINAL** | 0, 1, 2     | Wenig Speicher | Fehleranfällig bei Änderungen |
 
 **⚠️ Empfehlung:** Immer `EnumType.STRING` verwenden!
 
@@ -1062,19 +1075,19 @@ public interface CityJpaRepository extends JpaRepository<CityEntity, UUID> {
 
 #### Spring Data JPA Query Methods (Naming-Conventions):
 
-| Method-Name | Generiertes SQL | Beispiel |
-|-------------|-----------------|----------|
-| `findBy{Field}` | `WHERE field = ?` | `findByName("Köln")` |
-| `findBy{Field}Containing` | `WHERE field LIKE %?%` | `findByNameContaining("Köl")` |
-| `findBy{Field}IgnoreCase` | `WHERE LOWER(field) = LOWER(?)` | `findByNameIgnoreCase("KÖLN")` |
-| `findBy{Field1}And{Field2}` | `WHERE field1 = ? AND field2 = ?` | `findByNameAndZipCode(...)` |
-| `findBy{Field1}Or{Field2}` | `WHERE field1 = ? OR field2 = ?` | `findByNameOrZipCode(...)` |
-| `findBy{Field}Between` | `WHERE field BETWEEN ? AND ?` | `findByCreatedBetween(...)` |
-| `findBy{Field}LessThan` | `WHERE field < ?` | `findByAgeLessThan(30)` |
-| `findBy{Field}GreaterThan` | `WHERE field > ?` | `findByAgeGreaterThan(18)` |
-| `findBy{Field}IsNull` | `WHERE field IS NULL` | `findByEmailIsNull()` |
-| `findBy{Field}IsNotNull` | `WHERE field IS NOT NULL` | `findByEmailIsNotNull()` |
-| `findBy{Field}OrderBy{Field2}` | `ORDER BY field2` | `findByNameOrderByCreatedDesc()` |
+|          Method-Name           |          Generiertes SQL          |             Beispiel             |
+|--------------------------------|-----------------------------------|----------------------------------|
+| `findBy{Field}`                | `WHERE field = ?`                 | `findByName("Köln")`             |
+| `findBy{Field}Containing`      | `WHERE field LIKE %?%`            | `findByNameContaining("Köl")`    |
+| `findBy{Field}IgnoreCase`      | `WHERE LOWER(field) = LOWER(?)`   | `findByNameIgnoreCase("KÖLN")`   |
+| `findBy{Field1}And{Field2}`    | `WHERE field1 = ? AND field2 = ?` | `findByNameAndZipCode(...)`      |
+| `findBy{Field1}Or{Field2}`     | `WHERE field1 = ? OR field2 = ?`  | `findByNameOrZipCode(...)`       |
+| `findBy{Field}Between`         | `WHERE field BETWEEN ? AND ?`     | `findByCreatedBetween(...)`      |
+| `findBy{Field}LessThan`        | `WHERE field < ?`                 | `findByAgeLessThan(30)`          |
+| `findBy{Field}GreaterThan`     | `WHERE field > ?`                 | `findByAgeGreaterThan(18)`       |
+| `findBy{Field}IsNull`          | `WHERE field IS NULL`             | `findByEmailIsNull()`            |
+| `findBy{Field}IsNotNull`       | `WHERE field IS NOT NULL`         | `findByEmailIsNotNull()`         |
+| `findBy{Field}OrderBy{Field2}` | `ORDER BY field2`                 | `findByNameOrderByCreatedDesc()` |
 
 ### 3.3 Repository mit Beziehungen: PracticeJpaRepository
 
@@ -1691,6 +1704,7 @@ doctor-provider/
 ### 5.2 Alle Dateien im Überblick
 
 #### ✅ City.java (Domain - bereits vorhanden)
+
 ```java
 package test.doctor_provider.domain.model;
 
@@ -1710,6 +1724,7 @@ public class City {
 ```
 
 #### ✅ CityOutgoingPort.java (bereits vorhanden)
+
 ```java
 package test.doctor_provider.application.port.outgoing;
 
@@ -1726,8 +1741,11 @@ public interface CityOutgoingPort {
 ```
 
 #### ⭐ CityEntity.java (NEU - oben bereits erklärt)
+
 #### ⭐ CityJpaRepository.java (NEU - oben bereits erklärt)
+
 #### ⭐ CityEntityMapper.java (siehe MAPPER_GUIDE.md)
+
 #### ⭐ CityPersistenceAdapter.java (NEU - oben bereits erklärt)
 
 ---
@@ -1834,6 +1852,7 @@ private CityEntity city;
 - **Performance-Vorteil**: Spart Datenbank-Abfragen
 
 **Beispiel:**
+
 ```java
 PracticeEntity practice = practiceRepository.findById(id);
 // Hier ist city NOCH NICHT geladen! ❌
@@ -1843,6 +1862,7 @@ String cityName = practice.getCity().getName();
 ```
 
 **SQL:**
+
 ```sql
 -- Erste Query
 SELECT * FROM practice WHERE id = '...'
@@ -1866,6 +1886,7 @@ private CityEntity city;
 - **Performance-Nachteil**: Mehr Daten, auch wenn unnötig
 
 **Beispiel:**
+
 ```java
 PracticeEntity practice = practiceRepository.findById(id);
 // Hier ist city BEREITS geladen! ✅ (Ein einziger DB-Query mit JOIN)
@@ -1875,6 +1896,7 @@ String cityName = practice.getCity().getName();
 ```
 
 **SQL:**
+
 ```sql
 -- Nur EINE Query mit JOIN
 SELECT p.*, c.*
@@ -1887,12 +1909,12 @@ WHERE p.id = '...'
 
 #### **Wann welches verwenden?**
 
-| Beziehung | Empfehlung | Grund |
-|-----------|------------|-------|
-| **@ManyToOne** | `LAZY` ✅ | Standard: Lädt nur bei Bedarf |
-| **@OneToMany** | `LAZY` ✅ | Standard: Verhindert N+1 Problem |
-| **@OneToOne** | `LAZY` / `EAGER` | Abhängig vom Use Case |
-| **@ManyToMany** | `LAZY` ✅ | Standard: Zu viele Daten sonst |
+|    Beziehung    |    Empfehlung    |              Grund               |
+|-----------------|------------------|----------------------------------|
+| **@ManyToOne**  | `LAZY` ✅         | Standard: Lädt nur bei Bedarf    |
+| **@OneToMany**  | `LAZY` ✅         | Standard: Verhindert N+1 Problem |
+| **@OneToOne**   | `LAZY` / `EAGER` | Abhängig vom Use Case            |
+| **@ManyToMany** | `LAZY` ✅         | Standard: Zu viele Daten sonst   |
 
 ---
 
@@ -1917,6 +1939,7 @@ public interface PracticeRepository extends JpaRepository<PracticeEntity, UUID> 
 ```
 
 **Verwendung:**
+
 ```java
 // Wenn du NUR Practice-Daten brauchst
 PracticeEntity practice = repo.findById(id).orElseThrow();
@@ -1937,12 +1960,12 @@ String cityName = practice.getCity().getName(); // ✅ Bereits geladen
 private CityEntity city;
 ```
 
-| Parameter | Wert | Bedeutung |
-|-----------|------|-----------|
-| `fetch` | `LAZY` | City wird nur bei Bedarf geladen |
-| `optional` | `false` | Practice MUSS immer eine City haben (NOT NULL) |
-| `name` | `"city_id"` | DB-Spaltenname für den Foreign Key |
-| `nullable` | `false` | DB-Constraint: city_id darf nicht NULL sein |
+| Parameter  |    Wert     |                   Bedeutung                    |
+|------------|-------------|------------------------------------------------|
+| `fetch`    | `LAZY`      | City wird nur bei Bedarf geladen               |
+| `optional` | `false`     | Practice MUSS immer eine City haben (NOT NULL) |
+| `name`     | `"city_id"` | DB-Spaltenname für den Foreign Key             |
+| `nullable` | `false`     | DB-Constraint: city_id darf nicht NULL sein    |
 
 ---
 
@@ -2136,26 +2159,27 @@ public interface SlotEntityMapper {
 
 ### 9.1 Naming-Conventions
 
-| Komponente | Naming | Beispiel |
-|------------|--------|----------|
-| **Domain-Modell** | `{Entity}` | `City` |
-| **JPA-Entity** | `{Entity}Entity` | `CityEntity` |
-| **Repository** | `{Entity}JpaRepository` | `CityJpaRepository` |
-| **Entity-Mapper** | `{Entity}EntityMapper` | `CityEntityMapper` |
+|       Komponente        |            Naming            |         Beispiel         |
+|-------------------------|------------------------------|--------------------------|
+| **Domain-Modell**       | `{Entity}`                   | `City`                   |
+| **JPA-Entity**          | `{Entity}Entity`             | `CityEntity`             |
+| **Repository**          | `{Entity}JpaRepository`      | `CityJpaRepository`      |
+| **Entity-Mapper**       | `{Entity}EntityMapper`       | `CityEntityMapper`       |
 | **Persistence-Adapter** | `{Entity}PersistenceAdapter` | `CityPersistenceAdapter` |
 
 ### 9.2 Lazy vs. Eager Loading
 
-| Fetch-Type | Wann verwenden? | Vorteil | Nachteil |
-|------------|-----------------|---------|----------|
-| **LAZY** | Standard (immer verwenden!) | Performance | Kann LazyInitializationException werfen |
-| **EAGER** | Nur wenn wirklich benötigt | Einfach | Schlechte Performance |
+| Fetch-Type |       Wann verwenden?       |   Vorteil   |                Nachteil                 |
+|------------|-----------------------------|-------------|-----------------------------------------|
+| **LAZY**   | Standard (immer verwenden!) | Performance | Kann LazyInitializationException werfen |
+| **EAGER**  | Nur wenn wirklich benötigt  | Einfach     | Schlechte Performance                   |
 
 **⚠️ Empfehlung:** Immer `LAZY` verwenden und bei Bedarf `JOIN FETCH` in Queries nutzen!
 
 ### 9.3 N+1 Problem vermeiden
 
 **Problem:**
+
 ```java
 List<PracticeEntity> practices = repository.findAll();  // 1 Query
 for (PracticeEntity practice : practices) {
@@ -2165,12 +2189,14 @@ for (PracticeEntity practice : practices) {
 ```
 
 **Lösung 1: JOIN FETCH**
+
 ```java
 @Query("SELECT p FROM PracticeEntity p JOIN FETCH p.city")
 List<PracticeEntity> findAllWithCity();  // 1 Query (gut!)
 ```
 
 **Lösung 2: DTO-Projection**
+
 ```java
 @Query("SELECT p.name, c.name FROM PracticeEntity p JOIN p.city c")
 List<Object[]> findPracticeWithCityNames();  // 1 Query, nur benötigte Felder
@@ -2179,6 +2205,7 @@ List<Object[]> findPracticeWithCityNames();  // 1 Query, nur benötigte Felder
 ### 9.4 Indexes nutzen
 
 **In Flyway-Migration:**
+
 ```sql
 CREATE INDEX idx_practice_city_id ON practice(city_id);
 CREATE INDEX idx_practice_name ON practice(name);
@@ -2187,6 +2214,7 @@ CREATE INDEX idx_slot_working_hours ON slot(working_hours_id);
 ```
 
 **In Repository-Query:**
+
 ```java
 // Spring nutzt automatisch den Index idx_practice_city_id
 Page<PracticeEntity> findByCity_Id(UUID cityId, Pageable pageable);
@@ -2195,6 +2223,7 @@ Page<PracticeEntity> findByCity_Id(UUID cityId, Pageable pageable);
 ### 9.5 Transaktionen
 
 **Im Service-Layer (nicht im Adapter!):**
+
 ```java
 @Service
 @Transactional
@@ -2216,6 +2245,7 @@ public class PracticeService {
 ### 9.6 Pagination Best Practices
 
 **Immer Paginierung verwenden:**
+
 ```java
 // ❌ SCHLECHT: Lädt ALLE Datensätze
 List<CityEntity> findAll();
@@ -2225,6 +2255,7 @@ Page<CityEntity> findAll(Pageable pageable);
 ```
 
 **PageRequest erstellen:**
+
 ```java
 // Seite 0 (erste Seite), 20 Elemente pro Seite
 PageRequest pageRequest = PageRequest.of(0, 20);
@@ -2236,6 +2267,7 @@ PageRequest pageRequest = PageRequest.of(0, 20, Sort.by("name").ascending());
 ### 9.7 Optional vs. Null
 
 **In Repositories:**
+
 ```java
 // ✅ GUT: Optional für Single-Results
 Optional<CityEntity> findById(UUID id);
@@ -2246,6 +2278,7 @@ List<CityEntity> findByNameContaining(String name);
 ```
 
 **In Persistence-Adaptern:**
+
 ```java
 @Override
 public Optional<City> findById(UUID id) {
@@ -2257,6 +2290,7 @@ public Optional<City> findById(UUID id) {
 ### 9.8 Testing
 
 **Repository-Test:**
+
 ```java
 @DataJpaTest
 class CityJpaRepositoryTest {

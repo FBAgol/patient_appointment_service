@@ -11,12 +11,14 @@ Dieses Dokument beschreibt, wie Sie **Email-Verifikation** in Ihr Terminbuchungs
 ## 1. Warum Email-Verifikation?
 
 ### Vorteile:
+
 - ✅ **Sicherheit**: Verhindert Fake-Accounts mit fremden Email-Adressen
 - ✅ **Datenqualität**: Stellt sicher, dass Emails gültig sind
 - ✅ **Rechtssicherheit**: DSGVO-konform durch bestätigte Einwilligung
 - ✅ **Kommunikation**: Garantiert, dass Termine ankommen
 
 ### Nachteile:
+
 - ❌ **Komplexität**: SMTP-Server, Token-Management, Ablaufzeiten
 - ❌ **User Experience**: Zusätzlicher Schritt bei Registrierung
 - ❌ **Infrastruktur**: Email-Provider oder SMTP-Setup nötig
@@ -91,11 +93,11 @@ Es gibt **zwei verschiedene Ansätze** für Email-Verifikation:
 
 ### 📊 Empfehlung:
 
-| Anwendungsfall | Methode A (Link) | Methode B (Code) |
-|----------------|------------------|------------------|
-| Web-App only | ✅ Gut | ✅ Sehr gut |
-| Mobile App | ⚠️ Kompliziert | ✅ Ideal |
-| Sicherheit wichtig | ⚠️ Mittel | ✅ Hoch |
+|   Anwendungsfall    | Methode A (Link) | Methode B (Code) |
+|---------------------|------------------|------------------|
+| Web-App only        | ✅ Gut            | ✅ Sehr gut       |
+| Mobile App          | ⚠️ Kompliziert   | ✅ Ideal          |
+| Sicherheit wichtig  | ⚠️ Mittel        | ✅ Hoch           |
 | Einfachheit wichtig | ✅ Am einfachsten | ⚠️ Eingabe nötig |
 
 **Für Ihr Projekt:** Methode B (Code) ist **moderner und für Mobile-First-Apps besser geeignet**.
@@ -138,43 +140,45 @@ ALTER TABLE patient ADD COLUMN updated_at TIMESTAMP;
 
 #### 🔗 **Variante A: Link-basiert**
 
-| Attribut | Typ | Erklärung |
-|----------|-----|-----------|
-| id | BIGINT | Primärschlüssel |
-| email | VARCHAR(255) | E-Mail-Adresse (UNIQUE) |
-| first_name | VARCHAR(255) | Vorname |
-| last_name | VARCHAR(255) | Nachname |
-| password_hash | VARCHAR(255) | Gehashtes Passwort (BCrypt) |
-| **is_verified** | **BOOLEAN** | **Email bestätigt? (default: false)** |
-| **verification_token** | **VARCHAR(255)** | **UUID-Token für Link** |
-| **verification_token_expires_at** | **TIMESTAMP** | **Ablaufzeit (z.B. 24h)** |
-| created_at | TIMESTAMP | Registrierungszeitpunkt |
-| updated_at | TIMESTAMP | Letzte Änderung |
+|             Attribut              |       Typ        |               Erklärung               |
+|-----------------------------------|------------------|---------------------------------------|
+| id                                | BIGINT           | Primärschlüssel                       |
+| email                             | VARCHAR(255)     | E-Mail-Adresse (UNIQUE)               |
+| first_name                        | VARCHAR(255)     | Vorname                               |
+| last_name                         | VARCHAR(255)     | Nachname                              |
+| password_hash                     | VARCHAR(255)     | Gehashtes Passwort (BCrypt)           |
+| **is_verified**                   | **BOOLEAN**      | **Email bestätigt? (default: false)** |
+| **verification_token**            | **VARCHAR(255)** | **UUID-Token für Link**               |
+| **verification_token_expires_at** | **TIMESTAMP**    | **Ablaufzeit (z.B. 24h)**             |
+| created_at                        | TIMESTAMP        | Registrierungszeitpunkt               |
+| updated_at                        | TIMESTAMP        | Letzte Änderung                       |
 
 #### 🔢 **Variante B: Code-basiert (EMPFOHLEN)**
 
-| Attribut | Typ | Erklärung |
-|----------|-----|-----------|
-| id | BIGINT | Primärschlüssel |
-| email | VARCHAR(255) | E-Mail-Adresse (UNIQUE) |
-| first_name | VARCHAR(255) | Vorname |
-| last_name | VARCHAR(255) | Nachname |
-| password_hash | VARCHAR(255) | Gehashtes Passwort (BCrypt) |
-| **is_verified** | **BOOLEAN** | **Email bestätigt? (default: false)** |
-| **verification_code** | **VARCHAR(6)** | **6-stelliger Code** |
-| **verification_code_expires_at** | **TIMESTAMP** | **Ablaufzeit (15 Min)** |
-| **verification_attempts** | **INT** | **Anzahl Fehlversuche** |
-| created_at | TIMESTAMP | Registrierungszeitpunkt |
-| updated_at | TIMESTAMP | Letzte Änderung |
+|             Attribut             |      Typ       |               Erklärung               |
+|----------------------------------|----------------|---------------------------------------|
+| id                               | BIGINT         | Primärschlüssel                       |
+| email                            | VARCHAR(255)   | E-Mail-Adresse (UNIQUE)               |
+| first_name                       | VARCHAR(255)   | Vorname                               |
+| last_name                        | VARCHAR(255)   | Nachname                              |
+| password_hash                    | VARCHAR(255)   | Gehashtes Passwort (BCrypt)           |
+| **is_verified**                  | **BOOLEAN**    | **Email bestätigt? (default: false)** |
+| **verification_code**            | **VARCHAR(6)** | **6-stelliger Code**                  |
+| **verification_code_expires_at** | **TIMESTAMP**  | **Ablaufzeit (15 Min)**               |
+| **verification_attempts**        | **INT**        | **Anzahl Fehlversuche**               |
+| created_at                       | TIMESTAMP      | Registrierungszeitpunkt               |
+| updated_at                       | TIMESTAMP      | Letzte Änderung                       |
 
 ### 3.3 Index für Performance
 
 **Link-basiert:**
+
 ```sql
 CREATE INDEX idx_patient_verification_token ON patient(verification_token);
 ```
 
 **Code-basiert:**
+
 ```sql
 -- Kein Index nötig (Code wird nicht gesucht, nur verglichen)
 -- Email ist bereits UNIQUE indexed
@@ -187,6 +191,7 @@ CREATE INDEX idx_patient_verification_token ON patient(verification_token);
 ### 4.1 Abhängigkeiten hinzufügen
 
 **pom.xml:**
+
 ```xml
 <!-- Email-Versand -->
 <dependency>
@@ -230,6 +235,7 @@ app.verification.token-validity-hours=24
 #### 🔗 **Variante A: Link-basiert**
 
 **Patient.java:**
+
 ```java
 @Entity
 @Table(name = "patient")
@@ -267,6 +273,7 @@ public class Patient {
 #### 🔢 **Variante B: Code-basiert (EMPFOHLEN)**
 
 **Patient.java:**
+
 ```java
 @Entity
 @Table(name = "patient")
@@ -310,6 +317,7 @@ public class Patient {
 #### 🔗 **Variante A: Link-basiert**
 
 **EmailService.java:**
+
 ```java
 @Service
 public class EmailService {
@@ -342,6 +350,7 @@ public class EmailService {
 ```
 
 **Für HTML-Emails:**
+
 ```java
 public void sendVerificationEmailHtml(String toEmail, String token) {
     MimeMessage message = mailSender.createMimeMessage();
@@ -377,6 +386,7 @@ public void sendVerificationEmailHtml(String toEmail, String token) {
 #### 🔢 **Variante B: Code-basiert (EMPFOHLEN)**
 
 **EmailService.java:**
+
 ```java
 @Service
 public class EmailService {
@@ -452,6 +462,7 @@ public class EmailService {
 #### 🔗 **Variante A: Link-basiert**
 
 **AuthService.java:**
+
 ```java
 @Service
 public class AuthService {
@@ -505,6 +516,7 @@ public class AuthService {
 #### 🔢 **Variante B: Code-basiert (EMPFOHLEN)**
 
 **VerificationCodeGenerator.java (Helper-Klasse):**
+
 ```java
 @Component
 public class VerificationCodeGenerator {
@@ -523,6 +535,7 @@ public class VerificationCodeGenerator {
 ```
 
 **AuthService.java:**
+
 ```java
 @Service
 public class AuthService {
@@ -585,6 +598,7 @@ public class AuthService {
 #### 🔗 **Variante A: Link-basiert**
 
 **AuthController.java:**
+
 ```java
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -608,6 +622,7 @@ public class AuthController {
 ```
 
 **AuthService.java (erweitern):**
+
 ```java
 @Transactional
 public void verifyEmail(String token) {
@@ -662,6 +677,7 @@ public void resendVerificationEmail(String email) {
 #### 🔢 **Variante B: Code-basiert (EMPFOHLEN)**
 
 **VerifyCodeRequest.java (DTO):**
+
 ```java
 public class VerifyCodeRequest {
     @Email(message = "Ungültige Email-Adresse")
@@ -677,6 +693,7 @@ public class VerifyCodeRequest {
 ```
 
 **AuthController.java:**
+
 ```java
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -706,6 +723,7 @@ public class AuthController {
 ```
 
 **AuthService.java (erweitern):**
+
 ```java
 @Transactional
 public void verifyCode(String email, String code) {
@@ -783,6 +801,7 @@ public void resendVerificationCode(String email) {
 ### 4.7 Login-Logik anpassen
 
 **AuthService.java:**
+
 ```java
 public LoginResponse login(LoginRequest request) {
     // 1. Patient finden
@@ -809,6 +828,7 @@ public LoginResponse login(LoginRequest request) {
 ### 4.8 Repository erweitern
 
 **PatientRepository.java:**
+
 ```java
 @Repository
 public interface PatientRepository extends JpaRepository<Patient, Long> {
@@ -829,6 +849,7 @@ public interface PatientRepository extends JpaRepository<Patient, Long> {
 ### 5.1 Registrierung (geändert)
 
 **Beide Methoden identisch:**
+
 ```
 POST /api/v1/auth/register
 
@@ -904,6 +925,7 @@ Fehler (429 Too Many Requests):
 ### 5.3 Erneutes Senden
 
 #### 🔗 **Methode A: Link**
+
 ```
 POST /api/v1/auth/resend-verification?email=patient@example.com
 
@@ -914,6 +936,7 @@ Response (200 OK):
 ```
 
 #### 🔢 **Methode B: Code**
+
 ```
 POST /api/v1/auth/resend-code?email=patient@example.com
 
@@ -928,6 +951,7 @@ Response (200 OK):
 ### 5.4 Login (geändert)
 
 **Beide Methoden identisch:**
+
 ```
 POST /api/v1/auth/login
 
@@ -957,6 +981,7 @@ Fehler (403 Forbidden):
 ### 6.1 Registrierungs-Flow
 
 **Nach erfolgreicher Registrierung (beide Methoden):**
+
 ```javascript
 async function register(userData) {
   const response = await fetch('/api/v1/auth/register', {
@@ -985,6 +1010,7 @@ async function register(userData) {
 #### 🔗 **Methode A: Link-basiert**
 
 **VerifyEmail.vue / VerifyEmail.jsx:**
+
 ```javascript
 // URL: /verify-email?token=abc-123
 
@@ -1016,6 +1042,7 @@ onMounted(verifyEmail);
 #### 🔢 **Methode B: Code-basiert (EMPFOHLEN)**
 
 **VerifyCode.vue / VerifyCode.jsx:**
+
 ```javascript
 // URL: /verify-code?email=patient@example.com
 
@@ -1076,6 +1103,7 @@ function handleInput(event) {
 ```
 
 **HTML-Template (Vue):**
+
 ```html
 <template>
   <div class="verify-container">
@@ -1139,6 +1167,7 @@ function handleInput(event) {
 ### 6.3 Erneutes Senden
 
 #### 🔗 **Methode A: Link**
+
 ```javascript
 async function resendVerification(email) {
   const response = await fetch(
@@ -1153,6 +1182,7 @@ async function resendVerification(email) {
 ```
 
 #### 🔢 **Methode B: Code**
+
 ```javascript
 async function resendCode() {
   isLoading.value = true;
@@ -1184,6 +1214,7 @@ async function resendCode() {
 ### 6.4 Login mit Fehlerbehandlung
 
 **Beide Methoden identisch:**
+
 ```javascript
 async function login(credentials) {
   try {
@@ -1220,6 +1251,7 @@ async function login(credentials) {
 ### 6.5 Erweiterte UX-Features (Code-Methode)
 
 **Auto-Submit nach 6. Ziffer:**
+
 ```javascript
 function handleInput(event) {
   code.value = event.target.value.replace(/\D/g, '').substring(0, 6);
@@ -1232,6 +1264,7 @@ function handleInput(event) {
 ```
 
 **Countdown-Timer:**
+
 ```javascript
 const timeRemaining = ref(900); // 15 Minuten in Sekunden
 
@@ -1328,6 +1361,7 @@ void shouldRejectExpiredToken() {
 ### 8.2 Rate Limiting
 
 **Verhindert Spam:**
+
 ```java
 @Service
 public class RateLimitService {
@@ -1390,11 +1424,13 @@ public class RateLimitService {
 ### 10.2 Externe Email-Services
 
 **SendGrid:**
+
 ```properties
 spring.sendgrid.api-key=YOUR_API_KEY
 ```
 
 **AWS SES:**
+
 ```properties
 cloud.aws.credentials.access-key=YOUR_KEY
 cloud.aws.credentials.secret-key=YOUR_SECRET
@@ -1429,6 +1465,7 @@ Wenn Sie Email-Verifikation später hinzufügen:
 - [ ] Bestehende User migrieren (is_verified = true setzen)
 
 **Bestehende Accounts aktivieren:**
+
 ```sql
 -- Alle existierenden Accounts verifizieren
 UPDATE patient SET is_verified = TRUE WHERE created_at < NOW();

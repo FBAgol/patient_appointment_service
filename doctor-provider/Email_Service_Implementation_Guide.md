@@ -17,6 +17,7 @@
 - ❌ Keine Wiederverwendbarkeit für andere Services
 
 **Architektur:**
+
 ```
 ┌─────────────────────────────────────┐
 │     Consumer-Service                │
@@ -59,6 +60,7 @@
 - ❌ Schwieriger lokal zu testen
 
 **Architektur:**
+
 ```
 ┌─────────────────┐        ┌─────────────────┐        ┌─────────────────┐
 │ Consumer-Service│        │  Kafka Broker   │        │  Email-Service  │
@@ -89,7 +91,7 @@
 
 **E-Mail-Versand im Consumer-Service implementieren**
 
-**Grund:** 
+**Grund:**
 - Du willst das System lokal testen
 - Ein separater Service würde zusätzliche Infrastruktur (Kafka) erfordern
 - Für ein Testprojekt ist die einfache Variante ausreichend
@@ -193,6 +195,7 @@ app:
 ```
 
 Füge in `.gitignore` hinzu:
+
 ```
 application-local.yml
 ```

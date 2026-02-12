@@ -1,6 +1,7 @@
 # 🔄 Mapper-Guide: Hexagonale Architektur mit MapStruct
 
 ## 📋 Inhaltsverzeichnis
+
 1. [Projektanalyse](#1-projektanalyse)
 2. [Mapper-Positionen in der Architektur](#2-mapper-positionen-in-der-architektur)
 3. [Was wird zu was gemappt?](#3-was-wird-zu-was-gemappt)
@@ -108,6 +109,7 @@ doctor-provider/
 ### 1.2 OpenAPI-Generierung (Spec-First)
 
 **Generierte API-Interfaces und DTOs:**
+
 ```
 target/generated-sources/openapi/
 └── test/doctor_provider/
@@ -246,11 +248,13 @@ In der Hexagonalen Architektur benötigst du **ZWEI verschiedene Mapper-Typen**:
 ### 2.2 Wo werden Mapper erstellt?
 
 #### ⭐ MAPPER 1: Web-Mapper (API-Layer)
+
 **Position:** `infrastructure/adapter/incomming/web/mapper/`
 
 **Zweck:** Konvertierung zwischen **API-DTOs** (generiert von OpenAPI) und **Domain-Modellen**
 
 **Dateien:**
+
 ```
 infrastructure/adapter/incomming/web/mapper/
 ├── CityWebMapper.java              # CityDto ↔ City
@@ -263,11 +267,13 @@ infrastructure/adapter/incomming/web/mapper/
 ```
 
 #### ⭐ MAPPER 2: Entity-Mapper (Persistence-Layer)
+
 **Position:** `infrastructure/adapter/outgoing/persistence/mapper/`
 
 **Zweck:** Konvertierung zwischen **Domain-Modellen** und **JPA-Entities**
 
 **Dateien:**
+
 ```
 infrastructure/adapter/outgoing/persistence/mapper/
 ├── CityEntityMapper.java           # City ↔ CityEntity
@@ -302,10 +308,10 @@ infrastructure/adapter/outgoing/persistence/mapper/
 
 **Mapping-Regeln:**
 
-| Mapper-Typ | Von | Nach | Besonderheiten |
-|------------|-----|------|----------------|
-| **CityWebMapper** | `CityDto` | `City` | - Einfaches 1:1 Mapping<br>- `postalCode` → `postalCode` |
-| **CityEntityMapper** | `City` | `CityEntity` | - **Feld-Umbenennung:** `postalCode` → `zipCode`<br>- JPA-Annotations ignorieren |
+|      Mapper-Typ      |    Von    |     Nach     |                                  Besonderheiten                                  |
+|----------------------|-----------|--------------|----------------------------------------------------------------------------------|
+| **CityWebMapper**    | `CityDto` | `City`       | - Einfaches 1:1 Mapping<br>- `postalCode` → `postalCode`                         |
+| **CityEntityMapper** | `City`    | `CityEntity` | - **Feld-Umbenennung:** `postalCode` → `zipCode`<br>- JPA-Annotations ignorieren |
 
 ### 3.2 Mapping-Übersicht: Practice (komplexeres Beispiel)
 
@@ -340,12 +346,12 @@ infrastructure/adapter/outgoing/persistence/mapper/
 
 **Mapping-Regeln:**
 
-| Mapper-Typ | Von | Nach | Besonderheiten |
-|------------|-----|------|----------------|
-| **PracticeWebMapper** | `CreatePracticeRequest` | `Practice` | - Kein `id` (wird von DB generiert)<br>- Email-Validierung (bereits in OpenAPI) |
-| **PracticeWebMapper** | `Practice` | `PracticeDto` | - Alle Felder 1:1<br>- `id` ist vorhanden |
-| **PracticeEntityMapper** | `Practice` | `PracticeEntity` | - **Beziehungs-Mapping:**<br>`cityId` (UUID) → `city` (CityEntity-Objekt)<br>- Lazy Loading beachten |
-| **PracticeEntityMapper** | `PracticeEntity` | `Practice` | - **Beziehungs-Auflösung:**<br>`city.getId()` → `cityId` |
+|        Mapper-Typ        |           Von           |       Nach       |                                            Besonderheiten                                            |
+|--------------------------|-------------------------|------------------|------------------------------------------------------------------------------------------------------|
+| **PracticeWebMapper**    | `CreatePracticeRequest` | `Practice`       | - Kein `id` (wird von DB generiert)<br>- Email-Validierung (bereits in OpenAPI)                      |
+| **PracticeWebMapper**    | `Practice`              | `PracticeDto`    | - Alle Felder 1:1<br>- `id` ist vorhanden                                                            |
+| **PracticeEntityMapper** | `Practice`              | `PracticeEntity` | - **Beziehungs-Mapping:**<br>`cityId` (UUID) → `city` (CityEntity-Objekt)<br>- Lazy Loading beachten |
+| **PracticeEntityMapper** | `PracticeEntity`        | `Practice`       | - **Beziehungs-Auflösung:**<br>`city.getId()` → `cityId`                                             |
 
 ### 3.3 Mapping-Übersicht: Doctor (n:m Beziehung)
 
@@ -369,11 +375,11 @@ infrastructure/adapter/outgoing/persistence/mapper/
 
 **Mapping-Regeln:**
 
-| Mapper-Typ | Von | Nach | Besonderheiten |
-|------------|-----|------|----------------|
-| **DoctorWebMapper** | `CreateDoctorRequest` | `Doctor` | - `specialityIds` kann `null` oder leer sein<br>- `practiceId` kann `null` sein |
-| **DoctorEntityMapper** | `Doctor` | `DoctorEntity` | - **n:1:** `practiceId` → `practice` (Entity laden oder lazy)<br>- **n:m:** `specialityIds` → `specialities` (Set von Entities) |
-| **DoctorEntityMapper** | `DoctorEntity` | `Doctor` | - `practice?.getId()` → `practiceId`<br>- `specialities.map(s → s.getId())` → `specialityIds` |
+|       Mapper-Typ       |          Von          |      Nach      |                                                         Besonderheiten                                                          |
+|------------------------|-----------------------|----------------|---------------------------------------------------------------------------------------------------------------------------------|
+| **DoctorWebMapper**    | `CreateDoctorRequest` | `Doctor`       | - `specialityIds` kann `null` oder leer sein<br>- `practiceId` kann `null` sein                                                 |
+| **DoctorEntityMapper** | `Doctor`              | `DoctorEntity` | - **n:1:** `practiceId` → `practice` (Entity laden oder lazy)<br>- **n:m:** `specialityIds` → `specialities` (Set von Entities) |
+| **DoctorEntityMapper** | `DoctorEntity`        | `Doctor`       | - `practice?.getId()` → `practiceId`<br>- `specialities.map(s → s.getId())` → `specialityIds`                                   |
 
 ### 3.4 Mapping-Übersicht: Slot (mit Datum/Zeit)
 
@@ -394,10 +400,10 @@ infrastructure/adapter/outgoing/persistence/mapper/
 
 **Mapping-Regeln:**
 
-| Mapper-Typ | Von | Nach | Besonderheiten |
-|------------|-----|------|----------------|
-| **SlotWebMapper** | `SlotDto` | `Slot` | - Enum-Mapping (direkt)<br>- ZonedDateTime bleibt gleich |
-| **SlotEntityMapper** | `Slot` | `SlotEntity` | - `workingHoursId` → `workingHours` (Entity)<br>- `SlotStatus` (Enum) → `@Enumerated(STRING)` |
+|      Mapper-Typ      |    Von    |     Nach     |                                        Besonderheiten                                         |
+|----------------------|-----------|--------------|-----------------------------------------------------------------------------------------------|
+| **SlotWebMapper**    | `SlotDto` | `Slot`       | - Enum-Mapping (direkt)<br>- ZonedDateTime bleibt gleich                                      |
+| **SlotEntityMapper** | `Slot`    | `SlotEntity` | - `workingHoursId` → `workingHours` (Entity)<br>- `SlotStatus` (Enum) → `@Enumerated(STRING)` |
 
 ### 3.5 Mapping-Übersicht: Page (Generisches Mapping)
 
@@ -1277,11 +1283,11 @@ public class PageWebMapper {
 
 ### 6.1 Naming Conventions
 
-| Mapper-Typ | Package | Naming | Beispiel |
-|------------|---------|--------|----------|
-| **Web-Mapper** | `infrastructure/adapter/incomming/web/mapper/` | `{Entity}WebMapper` | `CityWebMapper` |
+|    Mapper-Typ     |                        Package                        |         Naming         |      Beispiel      |
+|-------------------|-------------------------------------------------------|------------------------|--------------------|
+| **Web-Mapper**    | `infrastructure/adapter/incomming/web/mapper/`        | `{Entity}WebMapper`    | `CityWebMapper`    |
 | **Entity-Mapper** | `infrastructure/adapter/outgoing/persistence/mapper/` | `{Entity}EntityMapper` | `CityEntityMapper` |
-| **Page-Mapper** | `infrastructure/adapter/incomming/web/mapper/` | `PageWebMapper` | `PageWebMapper` |
+| **Page-Mapper**   | `infrastructure/adapter/incomming/web/mapper/`        | `PageWebMapper`        | `PageWebMapper`    |
 
 ### 6.2 Dependency Injection
 
@@ -1386,6 +1392,7 @@ public interface BadMapper {
 ```
 
 **Compiler-Fehler:**
+
 ```
 Can't map property "String name" to "UUID id". Consider to declare/implement a mapping method.
 ```
@@ -1394,12 +1401,12 @@ Can't map property "String name" to "UUID id". Consider to declare/implement a m
 
 **MapStruct ist schneller als manuelle Mapper:**
 
-| Methode | Performance |
-|---------|-------------|
-| MapStruct | ⭐⭐⭐⭐⭐ (Compile-Zeit Code-Generierung) |
-| Manuell | ⭐⭐⭐⭐ (Optimiert, aber mehr Boilerplate) |
-| ModelMapper | ⭐⭐ (Reflection zur Runtime) |
-| Dozer | ⭐ (Langsam durch XML-Konfiguration) |
+|   Methode   |               Performance               |
+|-------------|-----------------------------------------|
+| MapStruct   | ⭐⭐⭐⭐⭐ (Compile-Zeit Code-Generierung)   |
+| Manuell     | ⭐⭐⭐⭐ (Optimiert, aber mehr Boilerplate) |
+| ModelMapper | ⭐⭐ (Reflection zur Runtime)             |
+| Dozer       | ⭐ (Langsam durch XML-Konfiguration)     |
 
 ### 6.7 Testing
 
@@ -1447,14 +1454,14 @@ class CityWebMapperTest {
 
 ### 7.2 Vorteile MapStruct vs. Manuell
 
-| Feature | MapStruct | Manuell |
-|---------|-----------|---------|
-| **Boilerplate** | ✅ Sehr wenig | ❌ Viel Code |
-| **Type-Safety** | ✅ Compile-Zeit | ⚠️ Nur bei Tests |
-| **Performance** | ✅ Schnell | ✅ Schnell |
-| **Flexibilität** | ⚠️ Begrenzt (Custom Methods) | ✅ Volle Kontrolle |
-| **Wartbarkeit** | ✅ Sehr gut | ⚠️ Mehr Code = mehr Wartung |
-| **Lernkurve** | ⚠️ Annotations lernen | ✅ Einfach |
+|     Feature      |          MapStruct           |           Manuell           |
+|------------------|------------------------------|-----------------------------|
+| **Boilerplate**  | ✅ Sehr wenig                 | ❌ Viel Code                 |
+| **Type-Safety**  | ✅ Compile-Zeit               | ⚠️ Nur bei Tests            |
+| **Performance**  | ✅ Schnell                    | ✅ Schnell                   |
+| **Flexibilität** | ⚠️ Begrenzt (Custom Methods) | ✅ Volle Kontrolle           |
+| **Wartbarkeit**  | ✅ Sehr gut                   | ⚠️ Mehr Code = mehr Wartung |
+| **Lernkurve**    | ⚠️ Annotations lernen        | ✅ Einfach                   |
 
 **Empfehlung:** **MapStruct verwenden** für:
 - Einfache 1:1 Mappings

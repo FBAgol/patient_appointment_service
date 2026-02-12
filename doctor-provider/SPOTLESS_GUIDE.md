@@ -5,6 +5,7 @@
 **Spotless** ist ein Maven/Gradle Plugin für automatische Code-Formatierung.
 
 ### ✅ Vorteile:
+
 - ✅ **Konsistente Code-Formatierung** im gesamten Team
 - ✅ **Automatisches Formatieren** beim Build
 - ✅ **Ungenutzte Imports entfernen**
@@ -91,6 +92,7 @@ mvn spotless:check
 - Um zu testen, ob alle Dateien formatiert sind
 
 **Ausgabe bei Fehlern:**
+
 ```
 [ERROR] The following files had format violations:
 [ERROR]     src/main/java/test/doctor_provider/infrastructure/adapter/outgoing/persistence/entity/DoctorEntity.java
@@ -177,12 +179,12 @@ mvn clean install
 
 ## 📂 Was wird formatiert?
 
-| Datei-Typ | Formatierung |
-|-----------|--------------|
-| `**/*.java` | ✅ Google Java Format |
-| `pom.xml` | ✅ XML Sortierung |
-| `**/*.md` | ✅ Markdown Formatierung |
-| `**/target/**` | ❌ Ausgeschlossen |
+|         Datei-Typ         |        Formatierung        |
+|---------------------------|----------------------------|
+| `**/*.java`               | ✅ Google Java Format       |
+| `pom.xml`                 | ✅ XML Sortierung           |
+| `**/*.md`                 | ✅ Markdown Formatierung    |
+| `**/target/**`            | ❌ Ausgeschlossen           |
 | `**/generated-sources/**` | ❌ Ausgeschlossen (OpenAPI) |
 
 ---
@@ -192,6 +194,7 @@ mvn clean install
 ### **Problem 1: "spotless:check failed" im Build**
 
 **Lösung:**
+
 ```bash
 mvn spotless:apply
 ```
@@ -202,6 +205,7 @@ mvn spotless:apply
 
 **Lösung:**
 Maven lädt es automatisch beim ersten Ausführen.
+
 ```bash
 mvn spotless:apply
 # Wartet ab, bis Dependencies geladen sind
@@ -212,6 +216,7 @@ mvn spotless:apply
 ### **Problem 3: Formatierung rückgängig machen**
 
 **Lösung:**
+
 ```bash
 # Falls Spotless etwas kaputt gemacht hat:
 git checkout -- src/main/java/test/doctor_provider/...
@@ -309,11 +314,11 @@ jobs:
 
 ## ✅ Zusammenfassung
 
-| Befehl | Zweck |
-|--------|-------|
+|        Befehl        |         Zweck          |
+|----------------------|------------------------|
 | `mvn spotless:apply` | Code formatieren (FIX) |
-| `mvn spotless:check` | Nur prüfen (kein FIX) |
-| `mvn clean install` | Build + Auto-Check |
+| `mvn spotless:check` | Nur prüfen (kein FIX)  |
+| `mvn clean install`  | Build + Auto-Check     |
 
 **Best Practice:**
 1. **Vor jedem Commit:** `mvn spotless:apply`

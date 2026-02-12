@@ -1,6 +1,7 @@
 package test.doctor_provider.domain.model;
 
 import java.util.UUID;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class City {
-    private UUID id;
-    private String name;
-    private String postalCode;  // PLZ (mapped zu zip_code in DB)
+	private UUID id;
+	private String name;
+	private String postalCode; // PLZ (mapped zu zip_code in DB)
 }
