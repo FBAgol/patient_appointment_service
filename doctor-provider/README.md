@@ -28,9 +28,8 @@ mvn spring-boot:run
 
 |                            Dokument                            |                Beschreibung                |
 |----------------------------------------------------------------|--------------------------------------------|
-| [GIT_HOOKS_GUIDE.md](./GIT_HOOKS_GUIDE.md)                     | 🪝 Automatische Formatierung mit Git Hooks |
-| [SPOTLESS_QUICKSTART.md](./SPOTLESS_QUICKSTART.md)             | ⚡ Schnellstart für Code-Formatierung       |
-| [SPOTLESS_GUIDE.md](./SPOTLESS_GUIDE.md)                       | 📖 Ausführlicher Spotless-Guide            |
+| [GIT_HOOKS_KOMPLETT.md](./GIT_HOOKS_KOMPLETT.md)               | 🪝 Git Hooks - Vollständige Anleitung      |
+| [SPOTLESS_KOMPLETT.md](./SPOTLESS_KOMPLETT.md)                 | 🎨 Spotless - Vollständige Anleitung       |
 | [ENTITY_REPOSITORY_GUIDE.md](./ENTITY_REPOSITORY_GUIDE.md)     | 🗄️ JPA Entity & Repository Guide          |
 | [MAPPER_GUIDE.md](./MAPPER_GUIDE.md)                           | 🔄 MapStruct Mapper Guide                  |
 | [DATABASE_SETUP_GUIDE.md](./DATABASE_SETUP_GUIDE.md)           | 🗃️ Datenbank Setup Guide                  |
