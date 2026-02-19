@@ -48,12 +48,12 @@ paths:
       description: |
         Gibt eine paginierte Liste aller Städte zurück.
         Optional: Filter nach Name oder PLZ (Teilstring-Suche, case-insensitive).
-        
+
         📥 BEISPIELE:
         - GET /api/v1/cities?page=0&size=20 → Erste 20 Städte
         - GET /api/v1/cities?name=Köln&page=0&size=10 → Erste 10 Städte mit "Köln" im Namen
         - GET /api/v1/cities?postalCode=50667 → Stadt mit PLZ "50667"
-        
+
         📤 RESPONSE: PageResponse mit CityDto items (paginiert mit Metadaten)
       operationId: findAllCities
       parameters:
@@ -258,9 +258,9 @@ paths:
         - doctors
       summary: Alle Ärzte abrufen
       description: |
-        Gibt eine paginierte Liste aller registrierten Ärzte zurück. 
+        Gibt eine paginierte Liste aller registrierten Ärzte zurück.
         Unterstützt Suche nach Namen, Praxis und Fachrichtung.
-        
+
         📤 RESPONSE: Paginierte Liste mit Array von DoctorDto
       operationId: findAllDoctors
       parameters:
@@ -409,9 +409,9 @@ paths:
           Erstellt neue Working Hours für einen Arzt.
           - Beispiel: Arzt arbeitet Montag 08:00-12:00 und 14:00-18:00
           → 2 Working Hours mit Lücke (Pause) dazwischen
-          
+
           📌 Beispiel für Working Hours mit Pause:
-        
+
             // Vormittag
             POST /api/v1/doctors/123/working-hours
             {
@@ -419,7 +419,7 @@ paths:
               "startTime": "08:00",
               "endTime": "12:00"  // Keine Pause!
             }
-            
+
             // Nachmittag
             POST /api/v1/doctors/123/working-hours
             {
@@ -441,7 +441,7 @@ paths:
         '201':
           description: |
             Working Hours erfolgreich erstellt.
-            
+
             ⚠️ AUTOMATISCH: Slots werden direkt generiert!
             - Backend generiert automatisch Slots für die nächsten 4 Wochen
             - Alle Slots haben Status = AVAILABLE
@@ -458,7 +458,7 @@ paths:
                     type: array
                     description: |
                       Automatisch generierte Slots für diese Working Hours.
-                      
+
                       📌 Testprojekt - Auto-Generierung:
                       - Slots für die nächsten 4 Wochen (ab heute)
                       - Alle 30 Minuten
@@ -552,13 +552,13 @@ paths:
       summary: Slots suchen
       description: |
         Suche/Filter nach verschiedenen Kriterien.
-        
+
         📌 Filter (alle OPTIONAL):
         - doctorId: Slots eines bestimmten Arztes
         - workingHoursId: Slots einer bestimmten Working Hour
         - dateFrom + dateTo: Zeitraum filtern
         - status: Nach Status filtern (AVAILABLE, BOOKED, BLOCKED)
-        
+
         💡 Beispiel-Requests:
         - Patient: GET /api/v1/slots?doctorId={arzt-id}&dateFrom=2026-02-05&dateTo=2026-02-05&status=AVAILABLE
         - Admin (alle Ärzte): GET /api/v1/slots?dateFrom=2026-02-05&dateTo=2026-02-05
@@ -669,14 +669,14 @@ paths:
       summary: Slot buchen (Status auf BOOKED setzen)
       description: |
         Ändert den Status des Slots auf BOOKED.
-        
+
         ⚠️ Idempotent: Mehrfaches Aufrufen ist OK.
-        
+
         💡 Wird später vom Patient-Customer Service genutzt.
-        
+
         Validierungen:
         - Slot muss AVAILABLE sein (sonst 409 Conflict)
-        
+
         📌 Konsistent mit /block und /unblock:
         - Kein Request Body nötig (nur Status-Änderung)
         - patientId kann später über separaten Endpoint gesetzt werden
@@ -777,9 +777,9 @@ components:
       description: |
         Startdatum für Zeitraum-Filter (OPTIONAL).
         Format: YYYY-MM-DD (z.B. "2026-02-03")
-        
+
         Kann mit dateTo kombiniert werden für Zeitraum-Suche.
-        
+
         Beispiele:
         - Nur dateFrom: Alle Slots ab diesem Datum
         - dateFrom + dateTo: Alle Slots im Zeitraum (z.B. ganze Woche)
@@ -795,9 +795,9 @@ components:
       description: |
         Enddatum für Zeitraum-Filter (OPTIONAL).
         Format: YYYY-MM-DD (z.B. "2026-02-09")
-        
+
         Muss mit dateFrom kombiniert werden.
-        
+
         Beispiel: dateFrom=2026-02-03&dateTo=2026-02-09
         → Alle Slots von Mo 03.02. bis So 09.02. (ganze Woche)
       required: false
@@ -1276,16 +1276,16 @@ components:
       type: string
       description: |
         Enum für Slot-Status.
-        
+
         AVAILABLE = Verfügbar für Buchung (Standard bei Generierung)
         BOOKED = Bereits von einem Patienten gebucht
         BLOCKED = Administrativ blockiert (Sonderfälle--> Artz ist Krank oder Feiertage)
-        
+
         ℹ️ Hinweis zu BLOCKED:
         - Wird NICHT automatisch bei Slot-Generierung gesetzt
         - Nur für Sonderfälle: Krankheit, Meetings, Notfälle, etc.
         - Admin kann Slots manuell über PUT /api/v1/slots/{id}/block sperren
-        
+
         📌 Bei Phase 1 (Split Working Hours):
         - Pausen werden NICHT als BLOCKED-Slots gespeichert
         - Pausen sind implizit (Lücken zwischen Working Hours)
@@ -1305,23 +1305,21 @@ components:
     # WICHTIG: Enthält IMMER eine `id` (vom Server generiert)
     SlotDto:
       type: object
-      required: [id, doctorId, workingHoursId, startTime, endTime, status]
+      required: [id, workingHoursId, startTime, endTime, status]
       properties:
         id:
           type: string
           format: uuid
           description: |
+            📤 OUTPUT (IMMER vorhanden)
             Eindeutige ID des Slots.
-        doctorId:
-          type: string
-          format: uuid
-          description: |
-            ID des Arztes zu dem dieser Slot gehört.
         workingHoursId:
           type: string
           format: uuid
           description: |
+            📤 OUTPUT (IMMER vorhanden)
             ID der Working Hours zu der dieser Slot gehört.
+            Um doctorId zu bekommen: GET /api/v1/working-hours/{workingHoursId}
         startTime:
           type: string
           format: date-time
@@ -1351,7 +1349,7 @@ components:
       required: [startDate, endDate]
       description: |
         Request für Slot-Generierung.
-        
+
         📌 Testprojekt: Alle Slots sind IMMER 30 Minuten!
         - Keine Konfiguration der Slot-Dauer nötig
         - Backend generiert automatisch 30-Minuten-Slots
@@ -1362,7 +1360,7 @@ components:
           description: |
             Startdatum für Slot-Generierung (PFLICHT).
             Format: YYYY-MM-DD (z.B. "2026-02-03")
-            
+
             System generiert Slots ab diesem Datum.
         endDate:
           type: string
@@ -1370,9 +1368,9 @@ components:
           description: |
             Enddatum für Slot-Generierung (PFLICHT).
             Format: YYYY-MM-DD (z.B. "2026-02-28")
-            
+
             System generiert Slots bis zu diesem Datum (inklusive).
-            
+
             📌 Alle generierten Slots haben automatisch 30 Minuten Dauer.
             Beispiel: Working Hour 09:00-12:00
             → Slots: 09:00-09:30, 09:30-10:00, 10:00-10:30, 10:30-11:00, 11:00-11:30, 11:30-12:00

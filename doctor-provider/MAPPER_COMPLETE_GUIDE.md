@@ -1154,7 +1154,6 @@ import org.springframework.stereotype.Component;
 import test.doctor_provider.application.port.outgoing.DoctorOutgoingPort;
 import test.doctor_provider.domain.model.Doctor;
 import test.doctor_provider.infrastructure.adapter.outgoing.persistence.entity.DoctorEntity;
-import test.doctor_provider.infrastructure.adapter.outgoing.persistence.mapper.DoctorEntityMapper;
 import test.doctor_provider.infrastructure.adapter.outgoing.persistence.repository.DoctorJpaRepository;
 
 import java.util.List;
@@ -1171,60 +1170,60 @@ import java.util.UUID;
 @Component
 public class DoctorPersistenceAdapter implements DoctorOutgoingPort {
 
-    @Autowired
-    private DoctorJpaRepository repository;
+  @Autowired
+  private DoctorJpaRepository repository;
 
-    @Autowired
-    private DoctorEntityMapper mapper;  // ← MapStruct-Mapper
+  @Autowired
+  private DoctorEntityMapper mapper;  // ← MapStruct-Mapper
 
-    /**
-     * Speichert einen Doctor in der Datenbank
-     *
-     * Datenfluss:
-     * 1. Domain → Entity (Server → Datenbank)
-     * 2. Entity in DB speichern
-     * 3. Entity → Domain (Datenbank → Server)
-     */
-    @Override
-    public Doctor save(Doctor doctor) {
-        // 1. Domain → Entity (Server → Datenbank)
-        DoctorEntity entity = mapper.toEntity(doctor);
+  /**
+   * Speichert einen Doctor in der Datenbank
+   *
+   * Datenfluss:
+   * 1. Domain → Entity (Server → Datenbank)
+   * 2. Entity in DB speichern
+   * 3. Entity → Domain (Datenbank → Server)
+   */
+  @Override
+  public Doctor save(Doctor doctor) {
+    // 1. Domain → Entity (Server → Datenbank)
+    DoctorEntity entity = mapper.toEntity(doctor);
 
-        // 2. Speichern in DB
-        DoctorEntity saved = repository.save(entity);
+    // 2. Speichern in DB
+    DoctorEntity saved = repository.save(entity);
 
-        // 3. Entity → Domain (Datenbank → Server)
-        return mapper.toDomain(saved);
-    }
+    // 3. Entity → Domain (Datenbank → Server)
+    return mapper.toDomain(saved);
+  }
 
-    /**
-     * Lädt einen Doctor aus der Datenbank
-     *
-     * Datenfluss:
-     * 1. Entity aus DB laden
-     * 2. Entity → Domain (Datenbank → Server)
-     */
-    @Override
-    public Doctor findById(UUID id) {
-        // 1. Aus DB laden
-        DoctorEntity entity = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Doctor not found"));
+  /**
+   * Lädt einen Doctor aus der Datenbank
+   *
+   * Datenfluss:
+   * 1. Entity aus DB laden
+   * 2. Entity → Domain (Datenbank → Server)
+   */
+  @Override
+  public Doctor findById(UUID id) {
+    // 1. Aus DB laden
+    DoctorEntity entity = repository.findById(id)
+      .orElseThrow(() -> new RuntimeException("Doctor not found"));
 
-        // 2. Entity → Domain (Datenbank → Server)
-        return mapper.toDomain(entity);
-    }
+    // 2. Entity → Domain (Datenbank → Server)
+    return mapper.toDomain(entity);
+  }
 
-    /**
-     * Lädt alle Doctors aus der Datenbank
-     */
-    @Override
-    public List<Doctor> findAll() {
-        // 1. Alle Entities aus DB laden
-        List<DoctorEntity> entities = repository.findAll();
+  /**
+   * Lädt alle Doctors aus der Datenbank
+   */
+  @Override
+  public List<Doctor> findAll() {
+    // 1. Alle Entities aus DB laden
+    List<DoctorEntity> entities = repository.findAll();
 
-        // 2. List<Entity> → List<Domain> (Datenbank → Server)
-        return mapper.toDomain(entities);
-    }
+    // 2. List<Entity> → List<Domain> (Datenbank → Server)
+    return mapper.toDomain(entities);
+  }
 }
 ```
 
