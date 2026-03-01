@@ -499,7 +499,7 @@ package test.doctor_provider.infrastructure.adapter.outgoing.persistence.mapper;
 
 import org.springframework.stereotype.Component;
 import test.doctor_provider.domain.model.Doctor;
-import test.doctor_provider.infrastructure.adapter.outgoing.persistence.entity.DoctorEntity;
+import test.doctor_provider.infrastructure.outgoing.persistence.entity.DoctorEntity;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -514,81 +514,81 @@ import java.util.stream.Collectors;
 @Component
 public class DoctorEntityMapper {
 
-    // ========================================================================
-    // 💾 DOMAIN → ENTITY (Server speichert in Datenbank)
-    // ========================================================================
+  // ========================================================================
+  // 💾 DOMAIN → ENTITY (Server speichert in Datenbank)
+  // ========================================================================
 
-    /**
-     * Konvertiert Doctor zu DoctorEntity
-     *
-     * RICHTUNG: Server → Datenbank
-     * WANN: Beim Speichern (INSERT/UPDATE)
-     *
-     * @param domain Das Doctor Domain-Modell
-     * @return Ein DoctorEntity für die Datenbank
-     */
-    public DoctorEntity toEntity(Doctor domain) {
-        if (domain == null) {
-            return null;
-        }
-
-        DoctorEntity entity = new DoctorEntity();
-
-        // Kopiere alle Felder vom Domain-Modell zur Entity
-        entity.setId(domain.getId());
-        entity.setFirstName(domain.getFirstName());
-        entity.setLastName(domain.getLastName());
-        entity.setPracticeId(domain.getPracticeId());
-        entity.setSpecialityIds(domain.getSpecialityIds());
-
-        return entity;
+  /**
+   * Konvertiert Doctor zu DoctorEntity
+   *
+   * RICHTUNG: Server → Datenbank
+   * WANN: Beim Speichern (INSERT/UPDATE)
+   *
+   * @param domain Das Doctor Domain-Modell
+   * @return Ein DoctorEntity für die Datenbank
+   */
+  public DoctorEntity toEntity(Doctor domain) {
+    if (domain == null) {
+      return null;
     }
 
-    // ========================================================================
-    // 📦 ENTITY → DOMAIN (Server lädt aus Datenbank)
-    // ========================================================================
+    DoctorEntity entity = new DoctorEntity();
 
-    /**
-     * Konvertiert DoctorEntity zu Doctor
-     *
-     * RICHTUNG: Datenbank → Server
-     * WANN: Beim Laden (SELECT)
-     *
-     * @param entity Das DoctorEntity aus der Datenbank
-     * @return Ein Doctor Domain-Modell
-     */
-    public Doctor toDomain(DoctorEntity entity) {
-        if (entity == null) {
-            return null;
-        }
+    // Kopiere alle Felder vom Domain-Modell zur Entity
+    entity.setId(domain.getId());
+    entity.setFirstName(domain.getFirstName());
+    entity.setLastName(domain.getLastName());
+    entity.setPracticeId(domain.getPracticeId());
+    entity.setSpecialityIds(domain.getSpecialityIds());
 
-        Doctor doctor = new Doctor();
+    return entity;
+  }
 
-        // Kopiere alle Felder von der Entity zum Domain-Modell
-        doctor.setId(entity.getId());
-        doctor.setFirstName(entity.getFirstName());
-        doctor.setLastName(entity.getLastName());
-        doctor.setPracticeId(entity.getPracticeId());
-        doctor.setSpecialityIds(entity.getSpecialityIds());
+  // ========================================================================
+  // 📦 ENTITY → DOMAIN (Server lädt aus Datenbank)
+  // ========================================================================
 
-        return doctor;
+  /**
+   * Konvertiert DoctorEntity zu Doctor
+   *
+   * RICHTUNG: Datenbank → Server
+   * WANN: Beim Laden (SELECT)
+   *
+   * @param entity Das DoctorEntity aus der Datenbank
+   * @return Ein Doctor Domain-Modell
+   */
+  public Doctor toDomain(DoctorEntity entity) {
+    if (entity == null) {
+      return null;
     }
 
-    /**
-     * Konvertiert List<DoctorEntity> zu List<Doctor>
-     *
-     * @param entityList Eine Liste von DoctorEntity aus der Datenbank
-     * @return Eine Liste von Doctor Domain-Modellen
-     */
-    public List<Doctor> toDomain(List<DoctorEntity> entityList) {
-        if (entityList == null) {
-            return null;
-        }
+    Doctor doctor = new Doctor();
 
-        return entityList.stream()
-                .map(this::toDomain)
-                .collect(Collectors.toList());
+    // Kopiere alle Felder von der Entity zum Domain-Modell
+    doctor.setId(entity.getId());
+    doctor.setFirstName(entity.getFirstName());
+    doctor.setLastName(entity.getLastName());
+    doctor.setPracticeId(entity.getPracticeId());
+    doctor.setSpecialityIds(entity.getSpecialityIds());
+
+    return doctor;
+  }
+
+  /**
+   * Konvertiert List<DoctorEntity> zu List<Doctor>
+   *
+   * @param entityList Eine Liste von DoctorEntity aus der Datenbank
+   * @return Eine Liste von Doctor Domain-Modellen
+   */
+  public List<Doctor> toDomain(List<DoctorEntity> entityList) {
+    if (entityList == null) {
+      return null;
     }
+
+    return entityList.stream()
+      .map(this::toDomain)
+      .collect(Collectors.toList());
+  }
 }
 ```
 
@@ -1071,7 +1071,7 @@ package test.doctor_provider.infrastructure.adapter.outgoing.persistence.mapper;
 
 import org.mapstruct.Mapper;
 import test.doctor_provider.domain.model.Doctor;
-import test.doctor_provider.infrastructure.adapter.outgoing.persistence.entity.DoctorEntity;
+import test.doctor_provider.infrastructure.outgoing.persistence.entity.DoctorEntity;
 
 import java.util.List;
 
@@ -1087,60 +1087,60 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface DoctorEntityMapper {
 
-    // ========================================================================
-    // 💾 DOMAIN → ENTITY (Server speichert in Datenbank)
-    // ========================================================================
+  // ========================================================================
+  // 💾 DOMAIN → ENTITY (Server speichert in Datenbank)
+  // ========================================================================
 
-    /**
-     * Konvertiert Doctor → DoctorEntity
-     *
-     * RICHTUNG: Server → Datenbank
-     * WANN: Beim Speichern (INSERT/UPDATE)
-     *
-     * @param domain Das Doctor Domain-Modell
-     * @return Ein DoctorEntity für die Datenbank
-     *
-     * Automatisches Mapping für:
-     * - domain.id → entity.id
-     * - domain.firstName → entity.firstName
-     * - domain.lastName → entity.lastName
-     * - domain.practiceId → entity.practiceId
-     * - domain.specialityIds → entity.specialityIds
-     */
-    DoctorEntity toEntity(Doctor domain);
+  /**
+   * Konvertiert Doctor → DoctorEntity
+   *
+   * RICHTUNG: Server → Datenbank
+   * WANN: Beim Speichern (INSERT/UPDATE)
+   *
+   * @param domain Das Doctor Domain-Modell
+   * @return Ein DoctorEntity für die Datenbank
+   *
+   * Automatisches Mapping für:
+   * - domain.id → entity.id
+   * - domain.firstName → entity.firstName
+   * - domain.lastName → entity.lastName
+   * - domain.practiceId → entity.practiceId
+   * - domain.specialityIds → entity.specialityIds
+   */
+  DoctorEntity toEntity(Doctor domain);
 
-    // ========================================================================
-    // 📦 ENTITY → DOMAIN (Server lädt aus Datenbank)
-    // ========================================================================
+  // ========================================================================
+  // 📦 ENTITY → DOMAIN (Server lädt aus Datenbank)
+  // ========================================================================
 
-    /**
-     * Konvertiert DoctorEntity → Doctor
-     *
-     * RICHTUNG: Datenbank → Server
-     * WANN: Beim Laden (SELECT)
-     *
-     * @param entity Das DoctorEntity aus der Datenbank
-     * @return Ein Doctor Domain-Modell
-     *
-     * Automatisches Mapping für:
-     * - entity.id → domain.id
-     * - entity.firstName → domain.firstName
-     * - entity.lastName → domain.lastName
-     * - entity.practiceId → domain.practiceId
-     * - entity.specialityIds → domain.specialityIds
-     */
-    Doctor toDomain(DoctorEntity entity);
+  /**
+   * Konvertiert DoctorEntity → Doctor
+   *
+   * RICHTUNG: Datenbank → Server
+   * WANN: Beim Laden (SELECT)
+   *
+   * @param entity Das DoctorEntity aus der Datenbank
+   * @return Ein Doctor Domain-Modell
+   *
+   * Automatisches Mapping für:
+   * - entity.id → domain.id
+   * - entity.firstName → domain.firstName
+   * - entity.lastName → domain.lastName
+   * - entity.practiceId → domain.practiceId
+   * - entity.specialityIds → domain.specialityIds
+   */
+  Doctor toDomain(DoctorEntity entity);
 
-    /**
-     * Konvertiert List<DoctorEntity> → List<Doctor>
-     *
-     * RICHTUNG: Datenbank → Server
-     * WANN: Beim Laden mehrerer Datensätze
-     *
-     * @param entityList Eine Liste von DoctorEntity aus der Datenbank
-     * @return Eine Liste von Doctor Domain-Modellen
-     */
-    List<Doctor> toDomain(List<DoctorEntity> entityList);
+  /**
+   * Konvertiert List<DoctorEntity> → List<Doctor>
+   *
+   * RICHTUNG: Datenbank → Server
+   * WANN: Beim Laden mehrerer Datensätze
+   *
+   * @param entityList Eine Liste von DoctorEntity aus der Datenbank
+   * @return Eine Liste von Doctor Domain-Modellen
+   */
+  List<Doctor> toDomain(List<DoctorEntity> entityList);
 }
 ```
 
@@ -1153,7 +1153,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import test.doctor_provider.application.port.outgoing.DoctorOutgoingPort;
 import test.doctor_provider.domain.model.Doctor;
-import test.doctor_provider.infrastructure.adapter.outgoing.persistence.entity.DoctorEntity;
+import test.doctor_provider.infrastructure.outgoing.persistence.entity.DoctorEntity;
 import test.doctor_provider.infrastructure.adapter.outgoing.persistence.repository.DoctorJpaRepository;
 
 import java.util.List;

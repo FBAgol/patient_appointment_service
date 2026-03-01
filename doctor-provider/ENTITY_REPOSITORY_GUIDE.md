@@ -550,6 +550,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import test.doctor_provider.infrastructure.outgoing.persistence.entity.CityEntity;
 
 import java.util.UUID;
 
@@ -652,6 +653,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import test.doctor_provider.infrastructure.outgoing.persistence.entity.SpecialityEntity;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -711,9 +713,9 @@ public class DoctorEntity {
      */
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-        name = "doctor_speciality",                  // Join-Tabelle
-        joinColumns = @JoinColumn(name = "doctor_id"),         // FK zu doctor
-        inverseJoinColumns = @JoinColumn(name = "speciality_id") // FK zu speciality
+            name = "doctor_speciality",                  // Join-Tabelle
+            joinColumns = @JoinColumn(name = "doctor_id"),         // FK zu doctor
+            inverseJoinColumns = @JoinColumn(name = "speciality_id") // FK zu speciality
     )
     @Builder.Default
     private Set<SpecialityEntity> specialities = new HashSet<>();
@@ -880,6 +882,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import test.doctor_provider.domain.enums.SlotStatus;
+import test.doctor_provider.infrastructure.outgoing.persistence.entity.WorkingHoursEntity;
 
 import java.time.ZonedDateTime;
 import java.util.UUID;
@@ -986,7 +989,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import test.doctor_provider.infrastructure.adapter.outgoing.persistence.entity.CityEntity;
+import test.doctor_provider.infrastructure.outgoing.persistence.entity.CityEntity;
 
 import java.util.UUID;
 
@@ -1044,9 +1047,9 @@ public interface CityJpaRepository extends JpaRepository<CityEntity, UUID> {
      * Naming-Convention: findBy + Feld1 + And + Feld2
      */
     Page<CityEntity> findByNameContainingIgnoreCaseAndZipCode(
-        String name,
-        String zipCode,
-        Pageable pageable
+            String name,
+            String zipCode,
+            Pageable pageable
     );
 
     // ========================================================================
@@ -1192,7 +1195,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import test.doctor_provider.infrastructure.adapter.outgoing.persistence.entity.DoctorEntity;
+import test.doctor_provider.infrastructure.outgoing.persistence.entity.DoctorEntity;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -1216,9 +1219,9 @@ public interface DoctorJpaRepository extends JpaRepository<DoctorEntity, UUID> {
      * Findet Ärzte nach Vor- und Nachname
      */
     Page<DoctorEntity> findByFirstNameContainingIgnoreCaseAndLastNameContainingIgnoreCase(
-        String firstName,
-        String lastName,
-        Pageable pageable
+            String firstName,
+            String lastName,
+            Pageable pageable
     );
 
     /**
@@ -1246,10 +1249,10 @@ public interface DoctorJpaRepository extends JpaRepository<DoctorEntity, UUID> {
      * WHERE ds.speciality_id = :specialityId
      */
     @Query("""
-        SELECT DISTINCT d FROM DoctorEntity d
-        JOIN d.specialities s
-        WHERE s.id = :specialityId
-        """)
+            SELECT DISTINCT d FROM DoctorEntity d
+            JOIN d.specialities s
+            WHERE s.id = :specialityId
+            """)
     Page<DoctorEntity> findBySpecialityId(@Param("specialityId") UUID specialityId, Pageable pageable);
 
     /**
@@ -1258,14 +1261,14 @@ public interface DoctorJpaRepository extends JpaRepository<DoctorEntity, UUID> {
      * Komplexe Query: Arzt muss ALLE angegebenen Fachrichtungen haben
      */
     @Query("""
-        SELECT d FROM DoctorEntity d
-        WHERE :speciality1Id MEMBER OF d.specialities
-        AND :speciality2Id MEMBER OF d.specialities
-        """)
+            SELECT d FROM DoctorEntity d
+            WHERE :speciality1Id MEMBER OF d.specialities
+            AND :speciality2Id MEMBER OF d.specialities
+            """)
     Page<DoctorEntity> findByMultipleSpecialities(
-        @Param("speciality1Id") UUID speciality1Id,
-        @Param("speciality2Id") UUID speciality2Id,
-        Pageable pageable
+            @Param("speciality1Id") UUID speciality1Id,
+            @Param("speciality2Id") UUID speciality2Id,
+            Pageable pageable
     );
 
     // ========================================================================
@@ -1278,20 +1281,20 @@ public interface DoctorJpaRepository extends JpaRepository<DoctorEntity, UUID> {
      * Alle Parameter sind OPTIONAL (null wird ignoriert)
      */
     @Query("""
-        SELECT DISTINCT d FROM DoctorEntity d
-        LEFT JOIN d.practice p
-        LEFT JOIN d.specialities s
-        WHERE (:firstName IS NULL OR LOWER(d.firstName) LIKE LOWER(CONCAT('%', :firstName, '%')))
-        AND (:lastName IS NULL OR LOWER(d.lastName) LIKE LOWER(CONCAT('%', :lastName, '%')))
-        AND (:practiceId IS NULL OR p.id = :practiceId)
-        AND (:specialityId IS NULL OR s.id = :specialityId)
-        """)
+            SELECT DISTINCT d FROM DoctorEntity d
+            LEFT JOIN d.practice p
+            LEFT JOIN d.specialities s
+            WHERE (:firstName IS NULL OR LOWER(d.firstName) LIKE LOWER(CONCAT('%', :firstName, '%')))
+            AND (:lastName IS NULL OR LOWER(d.lastName) LIKE LOWER(CONCAT('%', :lastName, '%')))
+            AND (:practiceId IS NULL OR p.id = :practiceId)
+            AND (:specialityId IS NULL OR s.id = :specialityId)
+            """)
     Page<DoctorEntity> searchDoctors(
-        @Param("firstName") String firstName,
-        @Param("lastName") String lastName,
-        @Param("practiceId") UUID practiceId,
-        @Param("specialityId") UUID specialityId,
-        Pageable pageable
+            @Param("firstName") String firstName,
+            @Param("lastName") String lastName,
+            @Param("practiceId") UUID practiceId,
+            @Param("specialityId") UUID specialityId,
+            Pageable pageable
     );
 
     /**
@@ -1302,11 +1305,11 @@ public interface DoctorJpaRepository extends JpaRepository<DoctorEntity, UUID> {
      * - Nur verwenden, wenn wirklich benötigt (Performance!)
      */
     @Query("""
-        SELECT DISTINCT d FROM DoctorEntity d
-        LEFT JOIN FETCH d.practice
-        LEFT JOIN FETCH d.specialities
-        WHERE d.id = :id
-        """)
+            SELECT DISTINCT d FROM DoctorEntity d
+            LEFT JOIN FETCH d.practice
+            LEFT JOIN FETCH d.specialities
+            WHERE d.id = :id
+            """)
     Optional<DoctorEntity> findByIdWithRelations(@Param("id") UUID id);
 }
 ```
@@ -1323,7 +1326,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import test.doctor_provider.domain.enums.SlotStatus;
-import test.doctor_provider.infrastructure.adapter.outgoing.persistence.entity.SlotEntity;
+import test.doctor_provider.infrastructure.outgoing.persistence.entity.SlotEntity;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -1378,16 +1381,16 @@ public interface SlotJpaRepository extends JpaRepository<SlotEntity, UUID> {
      * Findet verfügbare Slots für einen Tag
      */
     @Query("""
-        SELECT s FROM SlotEntity s
-        WHERE s.startTime >= :dayStart
-        AND s.startTime < :dayEnd
-        AND s.status = :status
-        ORDER BY s.startTime ASC
-        """)
+            SELECT s FROM SlotEntity s
+            WHERE s.startTime >= :dayStart
+            AND s.startTime < :dayEnd
+            AND s.status = :status
+            ORDER BY s.startTime ASC
+            """)
     List<SlotEntity> findAvailableSlotsForDay(
-        @Param("dayStart") ZonedDateTime dayStart,
-        @Param("dayEnd") ZonedDateTime dayEnd,
-        @Param("status") SlotStatus status
+            @Param("dayStart") ZonedDateTime dayStart,
+            @Param("dayEnd") ZonedDateTime dayEnd,
+            @Param("status") SlotStatus status
     );
 
     // ========================================================================
@@ -1400,35 +1403,35 @@ public interface SlotJpaRepository extends JpaRepository<SlotEntity, UUID> {
      * Join über: Slot → WorkingHours → Doctor
      */
     @Query("""
-        SELECT s FROM SlotEntity s
-        JOIN s.workingHours wh
-        WHERE wh.doctorId = :doctorId
-        AND s.startTime >= :startDate
-        AND s.startTime < :endDate
-        ORDER BY s.startTime ASC
-        """)
+            SELECT s FROM SlotEntity s
+            JOIN s.workingHours wh
+            WHERE wh.doctorId = :doctorId
+            AND s.startTime >= :startDate
+            AND s.startTime < :endDate
+            ORDER BY s.startTime ASC
+            """)
     List<SlotEntity> findByDoctorAndDateRange(
-        @Param("doctorId") UUID doctorId,
-        @Param("startDate") ZonedDateTime startDate,
-        @Param("endDate") ZonedDateTime endDate
+            @Param("doctorId") UUID doctorId,
+            @Param("startDate") ZonedDateTime startDate,
+            @Param("endDate") ZonedDateTime endDate
     );
 
     /**
      * Findet verfügbare Slots für einen Arzt
      */
     @Query("""
-        SELECT s FROM SlotEntity s
-        JOIN s.workingHours wh
-        WHERE wh.doctorId = :doctorId
-        AND s.startTime >= :startDate
-        AND s.startTime < :endDate
-        AND s.status = 'AVAILABLE'
-        ORDER BY s.startTime ASC
-        """)
+            SELECT s FROM SlotEntity s
+            JOIN s.workingHours wh
+            WHERE wh.doctorId = :doctorId
+            AND s.startTime >= :startDate
+            AND s.startTime < :endDate
+            AND s.status = 'AVAILABLE'
+            ORDER BY s.startTime ASC
+            """)
     List<SlotEntity> findAvailableSlotsByDoctorAndDateRange(
-        @Param("doctorId") UUID doctorId,
-        @Param("startDate") ZonedDateTime startDate,
-        @Param("endDate") ZonedDateTime endDate
+            @Param("doctorId") UUID doctorId,
+            @Param("startDate") ZonedDateTime startDate,
+            @Param("endDate") ZonedDateTime endDate
     );
 
     // ========================================================================
@@ -1441,27 +1444,27 @@ public interface SlotJpaRepository extends JpaRepository<SlotEntity, UUID> {
      * Nutzt Index: idx_slot_working_hours
      */
     @Query("""
-        SELECT COUNT(s) FROM SlotEntity s
-        JOIN s.workingHours wh
-        WHERE wh.doctorId = :doctorId
-        AND s.status = :status
-        """)
+            SELECT COUNT(s) FROM SlotEntity s
+            JOIN s.workingHours wh
+            WHERE wh.doctorId = :doctorId
+            AND s.status = :status
+            """)
     long countByDoctorAndStatus(
-        @Param("doctorId") UUID doctorId,
-        @Param("status") SlotStatus status
+            @Param("doctorId") UUID doctorId,
+            @Param("status") SlotStatus status
     );
 
     /**
      * Prüft ob Slot-Zeit bereits existiert (für Validierung)
      */
     @Query("""
-        SELECT COUNT(s) > 0 FROM SlotEntity s
-        WHERE s.workingHours.id = :workingHoursId
-        AND s.startTime = :startTime
-        """)
+            SELECT COUNT(s) > 0 FROM SlotEntity s
+            WHERE s.workingHours.id = :workingHoursId
+            AND s.startTime = :startTime
+            """)
     boolean existsByWorkingHoursAndStartTime(
-        @Param("workingHoursId") UUID workingHoursId,
-        @Param("startTime") ZonedDateTime startTime
+            @Param("workingHoursId") UUID workingHoursId,
+            @Param("startTime") ZonedDateTime startTime
     );
 }
 ```
@@ -1513,8 +1516,8 @@ import org.springframework.stereotype.Component;
 import test.doctor_provider.application.port.outgoing.CityOutgoingPort;
 import test.doctor_provider.domain.model.City;
 import test.doctor_provider.domain.model.Page;
-import test.doctor_provider.infrastructure.adapter.outgoing.persistence.entity.CityEntity;
-import test.doctor_provider.infrastructure.adapter.outgoing.persistence.mapper.CityEntityMapper;
+import test.doctor_provider.infrastructure.outgoing.persistence.entity.CityEntity;
+import test.doctor_provider.infrastructure.outgoing.persistence.mapper.CityEntityMapper;
 import test.doctor_provider.infrastructure.adapter.outgoing.persistence.repository.CityJpaRepository;
 
 import java.util.List;
@@ -1548,21 +1551,21 @@ public class CityPersistenceAdapter implements CityOutgoingPort {
         if (name.isPresent() && postalCode.isPresent()) {
             // Beide Filter gesetzt
             entityPage = repository.findByNameContainingIgnoreCaseAndZipCode(
-                name.get(),
-                postalCode.get(),
-                pageRequest
+                    name.get(),
+                    postalCode.get(),
+                    pageRequest
             );
         } else if (name.isPresent()) {
             // Nur Name-Filter
             entityPage = repository.findByNameContainingIgnoreCase(
-                name.get(),
-                pageRequest
+                    name.get(),
+                    pageRequest
             );
         } else if (postalCode.isPresent()) {
             // Nur PLZ-Filter
             entityPage = repository.findByZipCode(
-                postalCode.get(),
-                pageRequest
+                    postalCode.get(),
+                    pageRequest
             );
         } else {
             // Keine Filter
@@ -1574,11 +1577,11 @@ public class CityPersistenceAdapter implements CityOutgoingPort {
 
         // Spring Data Page → Domain Page
         return new Page<>(
-            cities,
-            entityPage.getNumber(),
-            entityPage.getSize(),
-            entityPage.getTotalElements(),
-            entityPage.getTotalPages()
+                cities,
+                entityPage.getNumber(),
+                entityPage.getSize(),
+                entityPage.getTotalElements(),
+                entityPage.getTotalPages()
         );
     }
 
@@ -1607,7 +1610,7 @@ import test.doctor_provider.application.port.outgoing.PracticeOutgoingPort;
 import test.doctor_provider.domain.model.Practice;
 import test.doctor_provider.domain.model.Page;
 import test.doctor_provider.infrastructure.adapter.outgoing.persistence.entity.PracticeEntity;
-import test.doctor_provider.infrastructure.adapter.outgoing.persistence.mapper.PracticeEntityMapper;
+import test.doctor_provider.infrastructure.outgoing.persistence.mapper.PracticeEntityMapper;
 import test.doctor_provider.infrastructure.adapter.outgoing.persistence.repository.PracticeJpaRepository;
 
 import java.util.Optional;
@@ -1649,14 +1652,14 @@ public class PracticePersistenceAdapter implements PracticeOutgoingPort {
         PageRequest pageRequest = PageRequest.of(page, size);
 
         org.springframework.data.domain.Page<PracticeEntity> entityPage =
-            repository.findByCity_Id(cityId, pageRequest);
+                repository.findByCity_Id(cityId, pageRequest);
 
         return new Page<>(
-            mapper.toDomainList(entityPage.getContent()),
-            entityPage.getNumber(),
-            entityPage.getSize(),
-            entityPage.getTotalElements(),
-            entityPage.getTotalPages()
+                mapper.toDomainList(entityPage.getContent()),
+                entityPage.getNumber(),
+                entityPage.getSize(),
+                entityPage.getTotalElements(),
+                entityPage.getTotalPages()
         );
     }
 
@@ -1787,6 +1790,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import test.doctor_provider.infrastructure.outgoing.persistence.entity.CityEntity;
+
 import java.util.UUID;
 
 @Entity
@@ -2037,8 +2042,9 @@ package test.doctor_provider.infrastructure.adapter.outgoing.persistence.mapper;
 
 import org.mapstruct.*;
 import test.doctor_provider.domain.model.Doctor;
-import test.doctor_provider.infrastructure.adapter.outgoing.persistence.entity.DoctorEntity;
-import test.doctor_provider.infrastructure.adapter.outgoing.persistence.entity.SpecialityEntity;
+import test.doctor_provider.infrastructure.outgoing.persistence.entity.DoctorEntity;
+import test.doctor_provider.infrastructure.outgoing.persistence.entity.SpecialityEntity;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -2125,7 +2131,8 @@ package test.doctor_provider.infrastructure.adapter.outgoing.persistence.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import test.doctor_provider.domain.model.Slot;
-import test.doctor_provider.infrastructure.adapter.outgoing.persistence.entity.SlotEntity;
+import test.doctor_provider.infrastructure.outgoing.persistence.entity.SlotEntity;
+
 import java.util.List;
 
 @Mapper(componentModel = "spring")
@@ -2149,6 +2156,7 @@ public interface SlotEntityMapper {
     Slot toDomain(SlotEntity entity);
 
     List<Slot> toDomainList(List<SlotEntity> entities);
+
     List<SlotEntity> toEntityList(List<Slot> slots);
 }
 ```

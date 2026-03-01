@@ -391,8 +391,8 @@ import org.springframework.stereotype.Component;
 import test.doctor_provider.application.port.outgoing.PracticeOutgoingPort;
 import test.doctor_provider.domain.model.Practice;
 import test.doctor_provider.domain.model.Page;
-import test.doctor_provider.infrastructure.adapter.outgoing.persistence.entity.PracticeEntitiy;
-import test.doctor_provider.infrastructure.adapter.outgoing.persistence.mapper.PracticeEntityMapper;
+import test.doctor_provider.infrastructure.outgoing.persistence.entity.PracticeEntitiy;
+import test.doctor_provider.infrastructure.outgoing.persistence.mapper.PracticeEntityMapper;
 import test.doctor_provider.infrastructure.adapter.outgoing.persistence.repository.PracticeJpaRepository;
 
 import java.util.Optional;
@@ -403,109 +403,109 @@ import java.util.UUID;
 public class PracticePersistenceAdapter implements PracticeOutgoingPort {
 //                                                 ↑ implementiert das OutgoingPort
 
-    private final PracticeJpaRepository repository;  // ← DB-Zugriff
-    private final PracticeEntityMapper mapper;        // ← Domain ↔ Entity
+  private final PracticeJpaRepository repository;  // ← DB-Zugriff
+  private final PracticeEntityMapper mapper;        // ← Domain ↔ Entity
 
-    // ┌─────────────────────────────────────────────────────────────┐
-    // │ MUSTER 1: save() - Domain → Entity → DB → Entity → Domain │
-    // └─────────────────────────────────────────────────────────────┘
-    @Override
-    public Practice save(Practice practice) {
-        // Schritt 1: Domain → Entity (Mapper)
-        PracticeEntitiy entity = mapper.toEntity(practice);
+  // ┌─────────────────────────────────────────────────────────────┐
+  // │ MUSTER 1: save() - Domain → Entity → DB → Entity → Domain │
+  // └─────────────────────────────────────────────────────────────┘
+  @Override
+  public Practice save(Practice practice) {
+    // Schritt 1: Domain → Entity (Mapper)
+    PracticeEntitiy entity = mapper.toEntity(practice);
 
-        // Schritt 2: Entity in DB speichern (Repository)
-        //            → JPA generiert die ID und gibt die gespeicherte Entity zurück
-        PracticeEntitiy savedEntity = repository.save(entity);
+    // Schritt 2: Entity in DB speichern (Repository)
+    //            → JPA generiert die ID und gibt die gespeicherte Entity zurück
+    PracticeEntitiy savedEntity = repository.save(entity);
 
-        // Schritt 3: Entity → Domain (Mapper) und zurückgeben
-        return mapper.toDomain(savedEntity);
-    }
+    // Schritt 3: Entity → Domain (Mapper) und zurückgeben
+    return mapper.toDomain(savedEntity);
+  }
 
-    // ┌─────────────────────────────────────────────────────────────┐
-    // │ MUSTER 2: findById() - DB → Entity → Domain               │
-    // └─────────────────────────────────────────────────────────────┘
-    @Override
-    public Optional<Practice> findById(UUID id) {
-        // repository.findById() gibt Optional<PracticeEntitiy> zurück
-        // .map(mapper::toDomain) konvertiert das Entity (falls vorhanden) zu Domain
-        return repository.findById(id)
-                .map(mapper::toDomain);
-    }
-    // ⚠️ Was ist .map(mapper::toDomain)?
-    //    Kurzform für: .map(entity -> mapper.toDomain(entity))
-    //    Wenn Optional LEER ist → gibt Optional.empty() zurück (kein Mapper-Aufruf)
-    //    Wenn Optional VOLL ist → ruft mapper.toDomain(entity) auf
+  // ┌─────────────────────────────────────────────────────────────┐
+  // │ MUSTER 2: findById() - DB → Entity → Domain               │
+  // └─────────────────────────────────────────────────────────────┘
+  @Override
+  public Optional<Practice> findById(UUID id) {
+    // repository.findById() gibt Optional<PracticeEntitiy> zurück
+    // .map(mapper::toDomain) konvertiert das Entity (falls vorhanden) zu Domain
+    return repository.findById(id)
+      .map(mapper::toDomain);
+  }
+  // ⚠️ Was ist .map(mapper::toDomain)?
+  //    Kurzform für: .map(entity -> mapper.toDomain(entity))
+  //    Wenn Optional LEER ist → gibt Optional.empty() zurück (kein Mapper-Aufruf)
+  //    Wenn Optional VOLL ist → ruft mapper.toDomain(entity) auf
 
-    // ┌─────────────────────────────────────────────────────────────┐
-    // │ MUSTER 3: findAll() mit Paginierung + Filtern              │
-    // └─────────────────────────────────────────────────────────────┘
-    @Override
-    public Page<Practice> findAll(Optional<UUID> cityId, Optional<String> practiceName,
-                                   int page, int size) {
-        // Schritt 1: PageRequest erstellen (Spring Data braucht das)
-        PageRequest pageRequest = PageRequest.of(page, size);
+  // ┌─────────────────────────────────────────────────────────────┐
+  // │ MUSTER 3: findAll() mit Paginierung + Filtern              │
+  // └─────────────────────────────────────────────────────────────┘
+  @Override
+  public Page<Practice> findAll(Optional<UUID> cityId, Optional<String> practiceName,
+                                int page, int size) {
+    // Schritt 1: PageRequest erstellen (Spring Data braucht das)
+    PageRequest pageRequest = PageRequest.of(page, size);
 
-        // Schritt 2: Repository aufrufen (gibt Spring Data Page zurück)
-        //            Hier: Filter-Parameter an Repository weitergeben
-        //            .orElse(null) → Wenn Optional leer ist, wird null übergeben
-        //            → In der @Query: ":param IS NULL OR ..." fängt das ab
-        org.springframework.data.domain.Page<PracticeEntitiy> entityPage =
-            repository.findAllFiltered(
-                cityId.orElse(null),
-                practiceName.orElse(null),
-                pageRequest
-            );
+    // Schritt 2: Repository aufrufen (gibt Spring Data Page zurück)
+    //            Hier: Filter-Parameter an Repository weitergeben
+    //            .orElse(null) → Wenn Optional leer ist, wird null übergeben
+    //            → In der @Query: ":param IS NULL OR ..." fängt das ab
+    org.springframework.data.domain.Page<PracticeEntitiy> entityPage =
+      repository.findAllFiltered(
+        cityId.orElse(null),
+        practiceName.orElse(null),
+        pageRequest
+      );
 
-        // Schritt 3: Spring Data Page → Domain Page konvertieren
-        return new Page<>(
-            mapper.toDomain(entityPage.getContent()),  // List<Entity> → List<Domain>
-            entityPage.getNumber(),                     // aktuelle Seite
-            entityPage.getSize(),                       // Elemente pro Seite
-            entityPage.getTotalElements(),              // Gesamtanzahl
-            entityPage.getTotalPages()                  // Gesamtseiten
-        );
-    }
-    // ⚠️ WICHTIG: Wir haben ZWEI verschiedene "Page"-Klassen:
-    //    - org.springframework.data.domain.Page (Spring Data) → vom Repository
-    //    - test.doctor_provider.domain.model.Page (Domain)     → unser eigenes
-    //    Der Adapter konvertiert zwischen beiden!
+    // Schritt 3: Spring Data Page → Domain Page konvertieren
+    return new Page<>(
+      mapper.toDomain(entityPage.getContent()),  // List<Entity> → List<Domain>
+      entityPage.getNumber(),                     // aktuelle Seite
+      entityPage.getSize(),                       // Elemente pro Seite
+      entityPage.getTotalElements(),              // Gesamtanzahl
+      entityPage.getTotalPages()                  // Gesamtseiten
+    );
+  }
+  // ⚠️ WICHTIG: Wir haben ZWEI verschiedene "Page"-Klassen:
+  //    - org.springframework.data.domain.Page (Spring Data) → vom Repository
+  //    - test.doctor_provider.domain.model.Page (Domain)     → unser eigenes
+  //    Der Adapter konvertiert zwischen beiden!
 
-    // ┌─────────────────────────────────────────────────────────────┐
-    // │ MUSTER 4: Einfache Methoden (direkt durchreichen)         │
-    // └─────────────────────────────────────────────────────────────┘
-    @Override
-    public void removeById(UUID id) {
-        repository.deleteById(id);  // ← Direkt durchreichen, kein Mapper nötig
-    }
+  // ┌─────────────────────────────────────────────────────────────┐
+  // │ MUSTER 4: Einfache Methoden (direkt durchreichen)         │
+  // └─────────────────────────────────────────────────────────────┘
+  @Override
+  public void removeById(UUID id) {
+    repository.deleteById(id);  // ← Direkt durchreichen, kein Mapper nötig
+  }
 
-    @Override
-    public boolean existsById(UUID id) {
-        return repository.existsById(id);  // ← Direkt durchreichen
-    }
+  @Override
+  public boolean existsById(UUID id) {
+    return repository.existsById(id);  // ← Direkt durchreichen
+  }
 
-    @Override
-    public boolean existsByName(String name) {
-        return repository.existsByName(name);  // ← Direkt durchreichen
-    }
+  @Override
+  public boolean existsByName(String name) {
+    return repository.existsByName(name);  // ← Direkt durchreichen
+  }
 
-    @Override
-    public boolean existsByNameAndIdNot(String name, UUID excludeId) {
-        return repository.existsByNameAndIdNot(name, excludeId);
-    }
+  @Override
+  public boolean existsByNameAndIdNot(String name, UUID excludeId) {
+    return repository.existsByNameAndIdNot(name, excludeId);
+  }
 
-    // ┌─────────────────────────────────────────────────────────────┐
-    // │ MUSTER 5: update/modify (gleich wie save!)                │
-    // └─────────────────────────────────────────────────────────────┘
-    @Override
-    public Practice remove(Practice practice) {
-        // ⚠️ save() macht sowohl INSERT als auch UPDATE!
-        // Wenn die Entity eine ID hat → UPDATE
-        // Wenn die Entity keine ID hat → INSERT
-        PracticeEntitiy entity = mapper.toEntity(practice);
-        PracticeEntitiy savedEntity = repository.save(entity);
-        return mapper.toDomain(savedEntity);
-    }
+  // ┌─────────────────────────────────────────────────────────────┐
+  // │ MUSTER 5: update/modify (gleich wie save!)                │
+  // └─────────────────────────────────────────────────────────────┘
+  @Override
+  public Practice remove(Practice practice) {
+    // ⚠️ save() macht sowohl INSERT als auch UPDATE!
+    // Wenn die Entity eine ID hat → UPDATE
+    // Wenn die Entity keine ID hat → INSERT
+    PracticeEntitiy entity = mapper.toEntity(practice);
+    PracticeEntitiy savedEntity = repository.save(entity);
+    return mapper.toDomain(savedEntity);
+  }
 }
 ```
 
