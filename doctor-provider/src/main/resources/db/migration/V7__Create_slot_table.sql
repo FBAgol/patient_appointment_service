@@ -1,4 +1,4 @@
-CREATE TYPE slot_status AS ENUM ('available', 'booked', 'blocked');
+CREATE TYPE slot_status AS ENUM ('AVAILABLE', 'BOOKED', 'BLOCKED');
 
 CREATE TABLE slot
 (

@@ -1,19 +1,19 @@
 CREATE TYPE speciality_type AS ENUM (
-    'allgemeinmedizin',
-    'inneremedizin',
-    'kardiologe',
-    'dermatologe',
-    'orthopäde',
-    'neurologe',
-    'psychiater',
-    'gynäkologe',
-    'pädiater',
-    'urologe',
-    'augenarzt',
-    'hno',
-    'radiologe',
-    'anästhesist',
-    'zahnarzt'
+    'Allgemeinmedizin',
+    'InnereMedizin',
+    'Kardiologie',
+    'Dermatologie',
+    'Orthopädie',
+    'Neurologie',
+    'Psychiatrie',
+    'Gynäkologie',
+    'Pädiatrie',
+    'Urologie',
+    'Augenheilkunde',
+    'HNO',
+    'Radiologie',
+    'Anästhesiologie',
+    'Zahnmedizin'
 );
 
 CREATE TABLE speciality (
