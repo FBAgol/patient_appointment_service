@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # ========================================
+  # PostgreSQL Datenbank für doctor-provider
+  # ========================================
+  doctor-provider-db:
+    image: postgres:16-alpine
+    container_name: doctor-provider-db
+    environment:
+      POSTGRES_DB: ${DOCTOR_DB_NAME}
+      POSTGRES_USER: ${DOCTOR_DB_USER}
+      POSTGRES_PASSWORD: ${DOCTOR_DB_PASSWORD}
+    ports:
+      - "${DOCTOR_DB_PORT}:5432"
+    volumes:
+      - doctor-provider-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DOCTOR_DB_USER} -d ${DOCTOR_DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - doctor-network
+
+  # ========================================
+  # Doctor-Provider Spring Boot Service
+  # ========================================
+  doctor-provider-app:
+    build:
+      context: ./doctor-provider
+      dockerfile: Dockerfile
+    container_name: doctor-provider-app
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://doctor-provider-db:5432/${DOCTOR_DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DOCTOR_DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DOCTOR_DB_PASSWORD}
+    ports:
+      - "${DOCTOR_APP_PORT}:8080"
+    depends_on:
+      doctor-provider-db:
+        condition: service_healthy
+    networks:
+      - doctor-network
+
+volumes:
+  doctor-provider-data:
+
+networks:
+  doctor-network:
+    driver: bridge
+

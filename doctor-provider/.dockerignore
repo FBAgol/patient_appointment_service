@@ -1,0 +1,22 @@
+# IDE
+.idea/
+.git/
+*.iml
+.editorconfig
+.gitattributes
+.gitignore
+
+# Build
+target/
+
+# Docs
+*.md
+*.drawio
+
+# Scripts
+*.sh
+.spotless/
+
+# Git Hooks
+.git-hooks/
+

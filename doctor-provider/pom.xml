@@ -28,6 +28,8 @@
   </scm>
   <properties>
     <java.version>25</java.version>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <openapi-generator-version>7.10.0</openapi-generator-version>
     <spotless.version>2.43.0</spotless.version>
   </properties>
@@ -121,6 +123,14 @@
   </dependencies>
 
   <build>
+    <!-- Filtering deaktiviert: Umlaute in SQL/YAML-Dateien verursachen sonst MalformedInputException -->
+    <!-- Spring Boot braucht kein Maven-Filtering, ${...} Properties werden zur Laufzeit aufgelöst -->
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+      </resource>
+    </resources>
     <plugins>
       <!-- Spotless: Code-Formatierung -->
       <plugin>

@@ -28,7 +28,7 @@ public class PracticeEntitiy {
 	@Column(name = "street", nullable = false, length = 300)
 	private String street;
 
-	@Column(name = "houseNumber", nullable = false, length = 20)
+	@Column(name = "house_number", nullable = false, length = 20)
 	private String houseNumber;
 
 	@Column(name = "phone", nullable = false, length = 50)
