@@ -14,7 +14,7 @@ public interface WorkingHoursIncomingPort {
 	/**
 	 * Erstellt neue Working Hours für einen Arzt.
 	 *
-	 * Entspricht: POST /api/v1/doctors/{doctorId}/working-hours (operationId:
+	 * Entspricht: POST /api/v1/internal/doctors/{doctorId}/working-hours (operationId:
 	 * registerWorkingHours)
 	 *
 	 * ⚠️ Slots werden automatisch generiert (nächsten 4 Wochen, alle 30 Minuten)
@@ -30,7 +30,7 @@ public interface WorkingHoursIncomingPort {
 	/**
 	 * Gibt alle Working Hours eines Arztes zurück.
 	 *
-	 * Entspricht: GET /api/v1/doctors/{doctorId}/working-hours (operationId:
+	 * Entspricht: GET /api/v1/internal/doctors/{doctorId}/working-hours (operationId:
 	 * findWorkingHoursForDoctor)
 	 *
 	 * @param doctorId
@@ -42,7 +42,7 @@ public interface WorkingHoursIncomingPort {
 	/**
 	 * Aktualisiert eine bestehende Working Hour.
 	 *
-	 * Entspricht: PUT /api/v1/working-hours/{id} (operationId: modifyWorkingHours)
+	 * Entspricht: PUT /api/v1/internal/working-hours/{id} (operationId: modifyWorkingHours)
 	 *
 	 * @param id
 	 *            UUID der zu aktualisierenden Working Hours
@@ -55,7 +55,7 @@ public interface WorkingHoursIncomingPort {
 	/**
 	 * Löscht eine Working Hour aus dem System.
 	 *
-	 * Entspricht: DELETE /api/v1/working-hours/{id} (operationId:
+	 * Entspricht: DELETE /api/v1/internal/working-hours/{id} (operationId:
 	 * removeWorkingHours)
 	 *
 	 * @param id

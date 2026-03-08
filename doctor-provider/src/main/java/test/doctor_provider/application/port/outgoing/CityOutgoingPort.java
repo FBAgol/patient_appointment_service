@@ -43,7 +43,7 @@ public interface CityOutgoingPort {
 	 * werden soll.
 	 *
 	 * Verwendung: - Validierung bei Practice.cityId - Validierung bei Filtern (z.B.
-	 * GET /api/v1/doctors?cityId=...)
+	 * GET /api/v1/internal/doctors?cityId=...)
 	 *
 	 * @param id
 	 *            UUID der Stadt

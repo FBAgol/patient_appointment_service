@@ -1,12 +1,12 @@
 package test.doctor_provider.infrastructure.outgoing.persistence.mapper;
 
+import java.util.List;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import test.doctor_provider.domain.model.Practice;
 import test.doctor_provider.infrastructure.outgoing.persistence.entity.PracticeEntitiy;
-
-import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface PracticeEntityMapper {

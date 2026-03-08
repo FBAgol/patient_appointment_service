@@ -52,10 +52,10 @@ public interface PracticeJpaRepository extends JpaRepository<PracticeEntitiy, UU
 
 **Was bedeuten die zwei Parameter in `JpaRepository<Entity, ID-Typ>`?**
 
-| Parameter | Bedeutung | Woher kommt der Wert? |
-|---|---|---|
-| 1. `PracticeEntitiy` | Die Entity-Klasse | Die `@Entity`-Klasse, die dieses Repository verwaltet |
-| 2. `UUID` | Der Typ des Primary Keys | Der Typ des `@Id`-Feldes in der Entity |
+|      Parameter       |        Bedeutung         |                 Woher kommt der Wert?                 |
+|----------------------|--------------------------|-------------------------------------------------------|
+| 1. `PracticeEntitiy` | Die Entity-Klasse        | Die `@Entity`-Klasse, die dieses Repository verwaltet |
+| 2. `UUID`            | Der Typ des Primary Keys | Der Typ des `@Id`-Feldes in der Entity                |
 
 Der zweite Parameter muss **immer exakt zum Typ des `@Id`-Feldes** passen:
 
@@ -82,23 +82,23 @@ JpaRepository<CityEntity, UUID>   // ✅ UUID passt zu UUID
 
 **Das war's!** Damit hast du bereits diese Methoden kostenlos:
 
-| Methode | Rückgabetyp | Was sie tut |
-|---|---|---|
-| `save(entity)` | `Entity` | INSERT (neue ID) oder UPDATE (bestehende ID) |
-| `saveAll(List<Entity>)` | `List<Entity>` | Mehrere auf einmal speichern (Bulk) |
-| `findById(id)` | `Optional<Entity>` | SELECT WHERE id = ? |
-| `findAll()` | `List<Entity>` | SELECT * (alle Einträge) |
-| `findAll(Pageable)` | `Page<Entity>` | SELECT * mit Paginierung |
-| `findAll(Sort)` | `List<Entity>` | SELECT * sortiert (z.B. nach Name) |
-| `findAllById(List<UUID>)` | `List<Entity>` | SELECT WHERE id IN (?, ?, ?) |
-| `deleteById(id)` | `void` | DELETE WHERE id = ? |
-| `delete(entity)` | `void` | DELETE (anhand des Entity-Objekts) |
-| `deleteAll()` | `void` | DELETE * (⚠️ löscht ALLES!) |
-| `deleteAllById(List<UUID>)` | `void` | DELETE WHERE id IN (?, ?, ?) |
-| `existsById(id)` | `boolean` | Gibt es einen Eintrag mit dieser ID? |
-| `count()` | `long` | Wie viele Einträge gibt es insgesamt? |
-| `flush()` | `void` | Schreibt alle Änderungen sofort in die DB |
-| `getReferenceById(id)` | `Entity` | Gibt einen Proxy zurück (LAZY, kein SELECT!) |
+|           Methode           |    Rückgabetyp     |                 Was sie tut                  |
+|-----------------------------|--------------------|----------------------------------------------|
+| `save(entity)`              | `Entity`           | INSERT (neue ID) oder UPDATE (bestehende ID) |
+| `saveAll(List<Entity>)`     | `List<Entity>`     | Mehrere auf einmal speichern (Bulk)          |
+| `findById(id)`              | `Optional<Entity>` | SELECT WHERE id = ?                          |
+| `findAll()`                 | `List<Entity>`     | SELECT * (alle Einträge)                     |
+| `findAll(Pageable)`         | `Page<Entity>`     | SELECT * mit Paginierung                     |
+| `findAll(Sort)`             | `List<Entity>`     | SELECT * sortiert (z.B. nach Name)           |
+| `findAllById(List<UUID>)`   | `List<Entity>`     | SELECT WHERE id IN (?, ?, ?)                 |
+| `deleteById(id)`            | `void`             | DELETE WHERE id = ?                          |
+| `delete(entity)`            | `void`             | DELETE (anhand des Entity-Objekts)           |
+| `deleteAll()`               | `void`             | DELETE * (⚠️ löscht ALLES!)                  |
+| `deleteAllById(List<UUID>)` | `void`             | DELETE WHERE id IN (?, ?, ?)                 |
+| `existsById(id)`            | `boolean`          | Gibt es einen Eintrag mit dieser ID?         |
+| `count()`                   | `long`             | Wie viele Einträge gibt es insgesamt?        |
+| `flush()`                   | `void`             | Schreibt alle Änderungen sofort in die DB    |
+| `getReferenceById(id)`      | `Entity`           | Gibt einen Proxy zurück (LAZY, kein SELECT!) |
 
 ### Eigene Methoden hinzufügen
 
@@ -126,6 +126,7 @@ public interface PracticeJpaRepository extends JpaRepository<PracticeEntitiy, UU
 ```
 
 **Regeln für Methodennamen:**
+
 ```
 findBy + Feldname          → WHERE feld = ?
 existsBy + Feldname        → boolean: gibt es das?
@@ -190,11 +191,11 @@ List<WorkingHoursEntity> findByDoctorNative(@Param("doctorId") UUID doctorId);
 
 **Wann welchen Weg?**
 
-| Situation | Weg |
-|---|---|
-| Einfache Abfragen (1-2 Felder) | Weg 1: Methodenname |
-| Komplexe Logik (JOINs, OR, Berechnungen) | Weg 2: @Query JPQL |
-| DB-spezifische Features (z.B. PostgreSQL-Funktionen) | Weg 3: nativeQuery |
+|                      Situation                       |         Weg         |
+|------------------------------------------------------|---------------------|
+| Einfache Abfragen (1-2 Felder)                       | Weg 1: Methodenname |
+| Komplexe Logik (JOINs, OR, Berechnungen)             | Weg 2: @Query JPQL  |
+| DB-spezifische Features (z.B. PostgreSQL-Funktionen) | Weg 3: nativeQuery  |
 
 ---
 
@@ -335,13 +336,13 @@ andere Felder brauchst, bekommst du das N+1 Problem.
 
 **Faustregel für dein Projekt:**
 
-| Entity | Beziehung | JOIN FETCH nötig? |
-|---|---|---|
-| `PracticeEntitiy` → `city` | Mapper braucht `city.id` | ⚠️ Empfohlen bei `findAll()` |
-| `DoctorEntity` → `practice` | Mapper braucht `practice.id` | ⚠️ Empfohlen bei `findAll()` |
-| `DoctorEntity` → `specialities` | Mapper braucht `specialities` (Set) | ✅ Ja, sonst N+1! |
-| `WorkingHoursEntity` → `doctor` | Mapper braucht `doctor.id` | ⚠️ Empfohlen bei `findAll()` |
-| `SlotEntity` → `workingHours` | Mapper braucht `workingHours.id` | ⚠️ Empfohlen bei `findAll()` |
+|             Entity              |              Beziehung              |      JOIN FETCH nötig?       |
+|---------------------------------|-------------------------------------|------------------------------|
+| `PracticeEntitiy` → `city`      | Mapper braucht `city.id`            | ⚠️ Empfohlen bei `findAll()` |
+| `DoctorEntity` → `practice`     | Mapper braucht `practice.id`        | ⚠️ Empfohlen bei `findAll()` |
+| `DoctorEntity` → `specialities` | Mapper braucht `specialities` (Set) | ✅ Ja, sonst N+1!             |
+| `WorkingHoursEntity` → `doctor` | Mapper braucht `doctor.id`          | ⚠️ Empfohlen bei `findAll()` |
+| `SlotEntity` → `workingHours`   | Mapper braucht `workingHours.id`    | ⚠️ Empfohlen bei `findAll()` |
 
 ---
 

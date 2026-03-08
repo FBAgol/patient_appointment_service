@@ -1,5 +1,9 @@
 package test.doctor_provider.infrastructure.outgoing.persistence.repository;
 
+import java.time.LocalTime;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -7,10 +11,6 @@ import org.springframework.stereotype.Repository;
 
 import test.doctor_provider.domain.enums.Weekday;
 import test.doctor_provider.infrastructure.outgoing.persistence.entity.WorkingHoursEntity;
-
-import java.time.LocalTime;
-import java.util.List;
-import java.util.UUID;
 
 @Repository
 public interface WorkingHoursRepository extends JpaRepository<WorkingHoursEntity, UUID> {

@@ -18,22 +18,19 @@ public interface SpecialityWebMapper {
 	 *
 	 * Datenfluss: Server → Client (Response)
 	 *
-	 * WICHTIG:
-	 * - Das Feld "name" hat unterschiedliche Enum-Typen:
-	 *   Domain:  SpecialityTyp  (z.B. Allgemeinmedizin, Kardiologie)
-	 *   API:     SpecialityType (z.B. ALLGEMEINMEDIZIN, KARDIOLOGE)
-	 * - Die @ValueMapping Annotationen mappen zwischen den verschiedenen
-	 *   Konstanten-Namen
+	 * WICHTIG: - Das Feld "name" hat unterschiedliche Enum-Typen: Domain:
+	 * SpecialityTyp (z.B. Allgemeinmedizin, Kardiologie) API: SpecialityType (z.B.
+	 * ALLGEMEINMEDIZIN, KARDIOLOGE) - Die @ValueMapping Annotationen mappen
+	 * zwischen den verschiedenen Konstanten-Namen
 	 */
 	SpecialityDto toDto(Speciality speciality);
 
 	/**
 	 * Konvertiert eine Liste von Speciality Domain zu List<SpecialityDto>
 	 *
-	 * Datenfluss: Server → Client (Response für GET /api/v1/specialities)
+	 * Datenfluss: Server → Client (Response für GET /api/v1/internal/specialities + /api/v1/external/specialities)
 	 *
-	 * WICHTIG:
-	 * - MapStruct ruft automatisch toDto(Speciality) für jedes Element auf
+	 * WICHTIG: - MapStruct ruft automatisch toDto(Speciality) für jedes Element auf
 	 * - Laut API: Response ist ein Array (keine Paginierung!)
 	 */
 	List<SpecialityDto> toDto(List<Speciality> specialities);

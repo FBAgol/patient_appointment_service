@@ -20,7 +20,7 @@ public interface DoctorIncomingPort {
 	 * Gibt alle Ärzte zurück, optional gefiltert nach Suchkriterien. Alle
 	 * Filter-Parameter sind optional.
 	 *
-	 * Entspricht: GET /api/v1/doctors (operationId: findAllDoctors)
+	 * Entspricht: GET /api/v1/internal/doctors (operationId: findAllDoctors)
 	 *
 	 * @param firstName
 	 *            Filter nach Vorname (Teilstring-Suche, case-insensitive)
@@ -44,7 +44,7 @@ public interface DoctorIncomingPort {
 	/**
 	 * Erstellt einen neuen Arzt im System.
 	 *
-	 * Entspricht: POST /api/v1/doctor (operationId: registerDoctor)
+	 * Entspricht: POST /api/v1/internal/doctor (operationId: registerDoctor)
 	 *
 	 * @param doctor
 	 *            Domain-Modell des zu erstellenden Arztes (ohne ID)
@@ -55,7 +55,7 @@ public interface DoctorIncomingPort {
 	/**
 	 * Aktualisiert einen bestehenden Arzt anhand seiner ID.
 	 *
-	 * Entspricht: PUT /api/v1/doctor/{id} (operationId: modifyDoctor)
+	 * Entspricht: PUT /api/v1/internal/doctor/{id} (operationId: modifyDoctor)
 	 *
 	 * @param doctorId
 	 *            UUID des zu aktualisierenden Arztes
@@ -68,7 +68,7 @@ public interface DoctorIncomingPort {
 	/**
 	 * Löscht einen Arzt aus dem System anhand seiner ID.
 	 *
-	 * Entspricht: DELETE /api/v1/doctor/{id} (operationId: removeDoctor)
+	 * Entspricht: DELETE /api/v1/internal/doctor/{id} (operationId: removeDoctor)
 	 *
 	 * @param doctorId
 	 *            UUID des zu löschenden Arztes

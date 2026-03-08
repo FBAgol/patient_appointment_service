@@ -127,8 +127,8 @@
     <!-- Spring Boot braucht kein Maven-Filtering, ${...} Properties werden zur Laufzeit aufgelöst -->
     <resources>
       <resource>
-        <directory>src/main/resources</directory>
         <filtering>false</filtering>
+        <directory>src/main/resources</directory>
       </resource>
     </resources>
     <plugins>

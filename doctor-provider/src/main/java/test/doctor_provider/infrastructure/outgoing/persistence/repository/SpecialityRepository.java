@@ -1,14 +1,14 @@
 package test.doctor_provider.infrastructure.outgoing.persistence.repository;
 
+import java.util.Set;
+import java.util.UUID;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import test.doctor_provider.infrastructure.outgoing.persistence.entity.SpecialityEntity;
-
-import java.util.Set;
-import java.util.UUID;
 
 @Repository
 public interface SpecialityRepository extends JpaRepository<SpecialityEntity, UUID> {

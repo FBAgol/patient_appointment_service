@@ -129,7 +129,7 @@ public interface SlotOutgoingPort {
 	/**
 	 * Löscht alle Slots einer Working Hour.
 	 *
-	 * ⚠️ WICHTIG: Wird verwendet bei DELETE /api/v1/working-hours/{id} - Entweder
+	 * ⚠️ WICHTIG: Wird verwendet bei DELETE /api/v1/internal/working-hours/{id} - Entweder
 	 * hier implementiert ODER via DB CASCADE DELETE
 	 *
 	 * @param workingHoursId

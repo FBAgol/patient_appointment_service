@@ -26,14 +26,14 @@ mvn spring-boot:run
 
 ## 📚 Dokumentation
 
-|                            Dokument                            |                Beschreibung                |
-|----------------------------------------------------------------|--------------------------------------------|
-| [GIT_HOOKS_KOMPLETT.md](./GIT_HOOKS_KOMPLETT.md)               | 🪝 Git Hooks - Vollständige Anleitung      |
-| [SPOTLESS_KOMPLETT.md](./SPOTLESS_KOMPLETT.md)                 | 🎨 Spotless - Vollständige Anleitung       |
-| [ENTITY_REPOSITORY_GUIDE.md](./ENTITY_REPOSITORY_GUIDE.md)     | 🗄️ JPA Entity & Repository Guide          |
-| [MAPPER_GUIDE.md](./MAPPER_GUIDE.md)                           | 🔄 MapStruct Mapper Guide                  |
-| [DATABASE_SETUP_GUIDE.md](./DATABASE_SETUP_GUIDE.md)           | 🗃️ Datenbank Setup Guide                  |
-| [POSTGRESQL_COMPLETE_GUIDE.md](./POSTGRESQL_COMPLETE_GUIDE.md) | 🐘 PostgreSQL Guide                        |
+|                            Dokument                            |             Beschreibung              |
+|----------------------------------------------------------------|---------------------------------------|
+| [GIT_HOOKS_KOMPLETT.md](./GIT_HOOKS_KOMPLETT.md)               | 🪝 Git Hooks - Vollständige Anleitung |
+| [SPOTLESS_KOMPLETT.md](./SPOTLESS_KOMPLETT.md)                 | 🎨 Spotless - Vollständige Anleitung  |
+| [ENTITY_REPOSITORY_GUIDE.md](./ENTITY_REPOSITORY_GUIDE.md)     | 🗄️ JPA Entity & Repository Guide     |
+| [MAPPER_GUIDE.md](./MAPPER_GUIDE.md)                           | 🔄 MapStruct Mapper Guide             |
+| [DATABASE_SETUP_GUIDE.md](./DATABASE_SETUP_GUIDE.md)           | 🗃️ Datenbank Setup Guide             |
+| [POSTGRESQL_COMPLETE_GUIDE.md](./POSTGRESQL_COMPLETE_GUIDE.md) | 🐘 PostgreSQL Guide                   |
 
 ---
 

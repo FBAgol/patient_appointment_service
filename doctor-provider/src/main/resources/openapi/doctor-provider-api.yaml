@@ -3,6 +3,17 @@ info:
   title: Doctor Provider API
   description: |
     API für die Verwaltung von Ärzten, Praxen, Stammdaten und Slot-Verfügbarkeit.
+
+    ## API-Struktur
+    Die API ist in zwei Bereiche aufgeteilt:
+
+    ### 🔒 Internal (`/api/v1/internal/...`)
+    Admin-Endpunkte für die Verwaltung von Ärzten, Praxen, Working Hours und Slots.
+    Nur für interne Services und Admin-Zugriff.
+
+    ### 🌐 External (`/api/v1/external/...`)
+    Endpunkte für externe Services (z.B. Patient-Customer-Service).
+    Für Arztsuche, Terminverfügbarkeit und Buchungen.
   version: 1.0.0
   contact:
     name: Doctor Provider Team
@@ -18,50 +29,74 @@ servers:
 # 🏷️ TAGS (Gruppierung der Endpoints)
 # =============================================================================
 tags:
-  - name: cities
-    description: Stammdaten – Städte
-  - name: specialities
-    description: Stammdaten – Fachrichtungen
-  - name: practices
-    description: Praxen
-  - name: doctors
-    description: Operationen für Ärzte
-  - name: working-hours
-    description: Arbeitszeiten von Ärzten
-  - name: slots
-    description: Slot Operations (Verfügbarkeit/Buchung/Blockieren)
+  # --- Internal (Admin) Tags ---
+  - name: internal-cities
+    description: "🔒 INTERNAL – Stammdaten: Städte verwalten"
+  - name: internal-specialities
+    description: "🔒 INTERNAL – Stammdaten: Fachrichtungen verwalten"
+  - name: internal-practices
+    description: "🔒 INTERNAL – Praxen verwalten (CRUD)"
+  - name: internal-doctors
+    description: "🔒 INTERNAL – Ärzte verwalten (CRUD)"
+  - name: internal-working-hours
+    description: "🔒 INTERNAL – Arbeitszeiten verwalten (CRUD)"
+  - name: internal-slots
+    description: "🔒 INTERNAL – Slots verwalten (Block/Unblock/Suche)"
+  # --- External (Customer) Tags ---
+  - name: external-search
+    description: "🌐 EXTERNAL – Arztsuche & Terminverfügbarkeit (Szenarien A)"
+  - name: external-booking
+    description: "🌐 EXTERNAL – Terminbuchung, Absage & Verschiebung (Szenarien B, C, D)"
 
+# =============================================================================
+# 📍 PATHS
+# =============================================================================
 paths:
-  # ============================
-  # Cities
-  # ============================
-  /api/v1/cities:
-    # -------------------------------------------------------------------------
-    # GET /api/v1/cities - Alle Städte abrufen (mit optionalen Filtern)
-    # -------------------------------------------------------------------------
-    # 📥 INPUT: Query-Parameter (name, postalCode) - BEIDE OPTIONAL
-    # 📤 OUTPUT: Array von CityDto
 
+  # ###########################################################################
+  # 🌐 EXTERNAL ENDPOINTS – für Patient-Customer-Service
+  # ###########################################################################
+
+  # ============================
+  # External: Stammdaten (Read-Only)
+  # ============================
+
+  /api/v1/external/specialities:
     get:
-      tags: [cities]
+      tags: [external-search]
+      summary: Alle Fachrichtungen abrufen
+      description: |
+        Gibt eine Liste aller verfügbaren Fachrichtungen zurück.
+        Wird vom Customer benötigt, um die Pflicht-Auswahl für die Arztsuche zu befüllen.
+
+        📌 Szenario A – Schritt 1: Patient wählt eine Fachrichtung aus.
+      operationId: findAllSpecialitiesExternal
+      responses:
+        '200':
+          description: Erfolgreich
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SpecialityDto'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/external/cities:
+    get:
+      tags: [external-search]
       summary: Alle Städte abrufen
       description: |
         Gibt eine paginierte Liste aller Städte zurück.
-        Optional: Filter nach Name oder PLZ (Teilstring-Suche, case-insensitive).
+        Optional: Filter nach Name oder PLZ.
 
-        📥 BEISPIELE:
-        - GET /api/v1/cities?page=0&size=20 → Erste 20 Städte
-        - GET /api/v1/cities?name=Köln&page=0&size=10 → Erste 10 Städte mit "Köln" im Namen
-        - GET /api/v1/cities?postalCode=50667 → Stadt mit PLZ "50667"
-
-        📤 RESPONSE: PageResponse mit CityDto items (paginiert mit Metadaten)
-      operationId: findAllCities
+        📌 Szenario A – Schritt 1: Patient kann optional eine Stadt auswählen.
+      operationId: findAllCitiesExternal
       parameters:
         - name: name
           in: query
-          description: |
-            📥 OPTIONAL: Filter nach Stadt-Name (Teilstring-Suche, case-insensitive).
-            Beispiel: "Köln" findet "Köln", "München" findet "München"
+          description: Filter nach Stadt-Name (Teilstring-Suche, case-insensitive)
           required: false
           schema:
             type: string
@@ -70,9 +105,7 @@ paths:
           example: "Köln"
         - name: postalCode
           in: query
-          description: |
-            📥 OPTIONAL: Filter nach Postleitzahl (exakte Suche oder Teilstring).
-            Beispiel: "50667" findet Stadt mit dieser PLZ, "506" findet alle PLZ mit "506"
+          description: Filter nach Postleitzahl
           required: false
           schema:
             type: string
@@ -101,11 +134,364 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
   # ============================
-  # Specialities
+  # External: Szenario A – Arztsuche
   # ============================
-  /api/v1/specialities:
+
+  /api/v1/external/doctors:
     get:
-      tags: [specialities]
+      tags: [external-search]
+      summary: "Szenario A – Ärzte nach Fachrichtung suchen"
+      description: |
+        Sucht Ärzte nach Fachrichtung (PFLICHT) und optional nach Stadt.
+        Gibt Ärzte mit aufgelösten Praxis-Informationen zurück.
+
+        📌 Szenario A – Schritt 1+2:
+        1. Patient wählt Fachrichtung (Pflicht) + optional Stadt
+        2. Patient bekommt Liste von Ärzten mit Praxis-Infos
+
+        📥 BEISPIELE:
+        - GET /api/v1/external/doctors?specialityId={id} → Alle Ärzte dieser Fachrichtung
+        - GET /api/v1/external/doctors?specialityId={id}&cityId={id} → Ärzte in bestimmter Stadt
+
+        📤 RESPONSE: Paginierte Liste mit DoctorWithPracticeDto (inkl. Praxis-Details)
+      operationId: searchDoctorsExternal
+      parameters:
+        - name: specialityId
+          in: query
+          description: |
+            📥 PFLICHT: Filter nach Fachrichtung.
+            Der Patient MUSS eine Fachrichtung auswählen.
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: cityId
+          in: query
+          description: |
+            📥 OPTIONAL: Filter nach Stadt.
+            Der Patient kann zusätzlich eine Stadt auswählen.
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - $ref: '#/components/parameters/PageQuery'
+        - $ref: '#/components/parameters/SizeQuery'
+      responses:
+        '200':
+          description: Ärzte erfolgreich gefunden (paginiert)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageResponse'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DoctorWithPracticeDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ============================
+  # External: Szenario A – Verfügbare Termine
+  # ============================
+
+  /api/v1/external/doctors/{doctorId}/available-slots:
+    get:
+      tags: [external-search]
+      summary: "Szenario A – Verfügbare Termine eines Arztes"
+      description: |
+        Gibt alle verfügbaren (AVAILABLE) Termine eines bestimmten Arztes zurück.
+
+        📌 Szenario A – Schritt 3+4:
+        3. Patient wählt einen Arzt und sucht freie Termine:
+           - Für einen bestimmten Tag (date)
+           - Für einen Zeitraum (dateFrom + dateTo)
+           - Oder: Standard = nächste 14 Tage (wenn kein Datum angegeben)
+        4. Patient bekommt alle freien Termine
+
+        📥 BEISPIELE:
+        - GET /api/v1/external/doctors/{id}/available-slots → Nächste 14 Tage (Default)
+        - GET /api/v1/external/doctors/{id}/available-slots?date=2026-03-15 → Bestimmter Tag
+        - GET /api/v1/external/doctors/{id}/available-slots?dateFrom=2026-03-10&dateTo=2026-03-20 → Zeitraum
+
+        📤 RESPONSE: Paginierte Liste mit SlotDto (NUR Status=AVAILABLE)
+      operationId: findAvailableSlotsExternal
+      parameters:
+        - $ref: '#/components/parameters/DoctorIdPath'
+        - name: date
+          in: query
+          description: |
+            📥 OPTIONAL: Bestimmter Tag.
+            Format: YYYY-MM-DD (z.B. "2026-03-15")
+            ⚠️ Kann NICHT mit dateFrom/dateTo kombiniert werden.
+          required: false
+          schema:
+            type: string
+            format: date
+          example: "2026-03-15"
+        - name: dateFrom
+          in: query
+          description: |
+            📥 OPTIONAL: Startdatum für Zeitraum-Suche.
+            Format: YYYY-MM-DD
+            Muss mit dateTo kombiniert werden.
+          required: false
+          schema:
+            type: string
+            format: date
+          example: "2026-03-10"
+        - name: dateTo
+          in: query
+          description: |
+            📥 OPTIONAL: Enddatum für Zeitraum-Suche.
+            Format: YYYY-MM-DD
+            Muss mit dateFrom kombiniert werden.
+          required: false
+          schema:
+            type: string
+            format: date
+          example: "2026-03-20"
+        - $ref: '#/components/parameters/PageQuery'
+        - $ref: '#/components/parameters/SizeQuery'
+      responses:
+        '200':
+          description: Verfügbare Slots erfolgreich abgerufen (paginiert)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageResponse'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/SlotDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ============================
+  # External: Szenario B – Termin buchen
+  # ============================
+
+  /api/v1/external/slots/{id}/book:
+    put:
+      tags: [external-booking]
+      summary: "Szenario B – Termin buchen"
+      description: |
+        Bucht einen verfügbaren Slot für einen Patienten.
+        Setzt den Slot-Status auf BOOKED.
+
+        📌 Szenario B:
+        1. Patient wählt einen freien Termin aus
+        2. Patient bucht den Termin → Status wird auf BOOKED gesetzt
+
+        Validierungen:
+        - Slot muss Status AVAILABLE haben (sonst 409 Conflict)
+        - patientId ist Pflicht (wird vom Customer-Service mitgesendet)
+      operationId: bookSlotExternal
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookSlotRequest'
+      responses:
+        '200':
+          description: Slot erfolgreich gebucht (Status = BOOKED)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SlotDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Konflikt – Slot ist nicht verfügbar (bereits gebucht oder blockiert)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ============================
+  # External: Szenario C – Termin absagen
+  # ============================
+
+  /api/v1/external/slots/{id}/cancel:
+    put:
+      tags: [external-booking]
+      summary: "Szenario C – Termin absagen"
+      description: |
+        Sagt einen gebuchten Termin ab.
+        Setzt den Slot-Status zurück auf AVAILABLE.
+
+        📌 Szenario C:
+        1. Patient möchte einen gebuchten Termin absagen
+        2. Status wird zurück auf AVAILABLE gesetzt → Slot ist wieder frei
+
+        Validierungen:
+        - Slot muss Status BOOKED haben (sonst 409 Conflict)
+        - patientId muss übereinstimmen (Verifikation)
+      operationId: cancelSlotExternal
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelSlotRequest'
+      responses:
+        '200':
+          description: Slot erfolgreich storniert (Status = AVAILABLE)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SlotDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Konflikt – Slot ist nicht gebucht (kann nicht storniert werden)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ============================
+  # External: Szenario D – Termin verschieben
+  # ============================
+
+  /api/v1/external/slots/reschedule:
+    put:
+      tags: [external-booking]
+      summary: "Szenario D – Termin verschieben"
+      description: |
+        Verschiebt einen gebuchten Termin auf einen neuen Slot.
+        Atomar: Alter Slot → AVAILABLE, Neuer Slot → BOOKED (in einer Transaktion).
+
+        📌 Szenario D:
+        1. Patient möchte seinen Termin verschieben
+        2. Zwei Aktionen werden gleichzeitig ausgeführt:
+           - Alter Termin (currentSlotId) → Status auf AVAILABLE
+           - Neuer Termin (newSlotId) → Status auf BOOKED
+
+        ⚠️ Warum atomar statt 2 separate Requests?
+        - Verhindert Race-Conditions (neuer Slot könnte zwischenzeitlich gebucht werden)
+        - Konsistenz: Wenn der neue Slot nicht verfügbar ist, bleibt der alte erhalten
+
+        Validierungen:
+        - currentSlotId muss Status BOOKED haben (sonst 409)
+        - newSlotId muss Status AVAILABLE haben (sonst 409)
+        - patientId muss mit dem aktuellen Slot übereinstimmen
+      operationId: rescheduleSlotExternal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RescheduleSlotRequest'
+      responses:
+        '200':
+          description: Termin erfolgreich verschoben
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescheduleResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: |
+            Konflikt – Verschiebung nicht möglich:
+            - Alter Slot ist nicht BOOKED
+            - Neuer Slot ist nicht AVAILABLE
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+  # ###########################################################################
+  # 🔒 INTERNAL ENDPOINTS – für Admin
+  # ###########################################################################
+
+  # ============================
+  # Internal: Cities (Stammdaten)
+  # ============================
+  /api/v1/internal/cities:
+    get:
+      tags: [internal-cities]
+      summary: Alle Städte abrufen
+      description: |
+        Gibt eine paginierte Liste aller Städte zurück.
+        Optional: Filter nach Name oder PLZ (Teilstring-Suche, case-insensitive).
+      operationId: findAllCities
+      parameters:
+        - name: name
+          in: query
+          description: Filter nach Stadt-Name (Teilstring-Suche, case-insensitive)
+          required: false
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 100
+          example: "Köln"
+        - name: postalCode
+          in: query
+          description: Filter nach Postleitzahl
+          required: false
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 20
+          example: "50667"
+        - $ref: '#/components/parameters/PageQuery'
+        - $ref: '#/components/parameters/SizeQuery'
+      responses:
+        '200':
+          description: Städte erfolgreich abgerufen (paginiert)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PageResponse'
+                  - type: object
+                    properties:
+                      items:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/CityDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ============================
+  # Internal: Specialities (Stammdaten)
+  # ============================
+  /api/v1/internal/specialities:
+    get:
+      tags: [internal-specialities]
       summary: Alle Fachrichtungen abrufen
       description: Gibt eine Liste aller Fachrichtungen zurück.
       operationId: findAllSpecialities
@@ -122,13 +508,13 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
   # ============================
-  # Practices (CRUD)
+  # Internal: Practices (CRUD)
   # ============================
-  /api/v1/practices:
+  /api/v1/internal/practices:
     get:
-      tags: [practices]
+      tags: [internal-practices]
       summary: Praxen abrufen
-      description: Gibt eine paged Liste von Praxen zurück.
+      description: Gibt eine paginierte Liste von Praxen zurück.
       operationId: findAllPractices
       parameters:
         - $ref: '#/components/parameters/CityIdQuery'
@@ -155,12 +541,11 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
 
-  /api/v1/practice:
+  /api/v1/internal/practice:
     post:
-      tags: [practices]
+      tags: [internal-practices]
       summary: Eine Praxis anlegen
-      description: |
-        Erstellt eine neue Praxis.
+      description: Erstellt eine neue Praxis.
       operationId: registerPractice
       requestBody:
         required: true
@@ -182,12 +567,11 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /api/v1/practice/{id}:
+  /api/v1/internal/practice/{id}:
     put:
-      tags: [practices]
+      tags: [internal-practices]
       summary: Eine Praxis aktualisieren
-      description: |
-        Aktualisiert eine Praxis anhand ihrer ID.
+      description: Aktualisiert eine Praxis anhand ihrer ID.
       operationId: modifyPractice
       parameters:
         - name: id
@@ -221,10 +605,9 @@ paths:
 
 
     delete:
-      tags: [practices]
+      tags: [internal-practices]
       summary: Eine Praxis löschen
-      description: |
-        Löscht eine Praxis anhand ihrer ID.
+      description: Löscht eine Praxis anhand ihrer ID.
       operationId: removePractice
       parameters:
         - name: id
@@ -245,23 +628,16 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
   # ============================
-  # Doctors (CRUD)
+  # Internal: Doctors (CRUD)
   # ============================
-  /api/v1/doctors:
-    # -------------------------------------------------------------------------
-    # GET /api/v1/doctors - Alle Ärzte abrufen (mit Filtern + Pagination)
-    # -------------------------------------------------------------------------
-    # 📥 INPUT: Query-Parameter (firstName, lastName, practiceId, specialityId, page, size)
-    # 📤 OUTPUT: DoctorPageResponse (Liste von DoctorDto + Pagination-Info)
+  /api/v1/internal/doctors:
     get:
-      tags:
-        - doctors
-      summary: Alle Ärzte abrufen
+      tags: [internal-doctors]
+      summary: Alle Ärzte abrufen (Admin)
       description: |
         Gibt eine paginierte Liste aller registrierten Ärzte zurück.
-        Unterstützt Suche nach Namen, Praxis und Fachrichtung.
-
-        📤 RESPONSE: Paginierte Liste mit Array von DoctorDto
+        Unterstützt Suche nach Namen, Praxis, Stadt und Fachrichtung.
+        Alle Filter sind OPTIONAL.
       operationId: findAllDoctors
       parameters:
         - $ref: '#/components/parameters/FirstNameQuery'
@@ -286,57 +662,41 @@ paths:
                         items:
                           $ref: '#/components/schemas/DoctorDto'
         '400':
-          $ref: '#/components/responses/BadRequest'              # ❌ ERROR
+          $ref: '#/components/responses/BadRequest'
         '500':
-          $ref: '#/components/responses/InternalServerError'     # ❌ ERROR
+          $ref: '#/components/responses/InternalServerError'
 
-  # ============================
-  # Doctor
-  # ============================
-  /api/v1/doctor:
-    # -------------------------------------------------------------------------
-    # POST /api/v1/doctor - EINEN Arzt anlegen
-    # -------------------------------------------------------------------------
-    # 📥 INPUT: CreateDoctorRequest (firstName, lastName, practice/practiceId, specialityIds)
-    # 📤 OUTPUT: DoctorDto (mit generierter ID)
-    # ❌ ERROR: 400 (Validierung), 409 (Konflikt), 500 (Server Error)
+  /api/v1/internal/doctor:
     post:
-      tags:
-        - doctors
+      tags: [internal-doctors]
       summary: Einen Arzt anlegen
-      description: |
-        Erstellt einen neuen Arzt im System.
+      description: Erstellt einen neuen Arzt im System.
       operationId: registerDoctor
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateDoctorRequest'  # 📥 INPUT REQUEST
+              $ref: '#/components/schemas/CreateDoctorRequest'
       responses:
         '201':
           description: Arzt erfolgreich erstellt
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DoctorDto'          # 📤 OUTPUT DTO
+                $ref: '#/components/schemas/DoctorDto'
         '400':
-          $ref: '#/components/responses/BadRequest'             # ❌ ERROR (Validierung)
+          $ref: '#/components/responses/BadRequest'
         '409':
           $ref: '#/components/responses/Conflict'
         '500':
-          $ref: '#/components/responses/InternalServerError'     # ❌ ERROR
+          $ref: '#/components/responses/InternalServerError'
 
-  /api/v1/doctor/{id}:
-    # -------------------------------------------------------------------------
-    # PUT /api/v1/doctor/{id} - EINEN Arzt aktualisieren (nach ID)
-    # -------------------------------------------------------------------------
+  /api/v1/internal/doctor/{id}:
     put:
-      tags:
-        - doctors
+      tags: [internal-doctors]
       summary: Einen Arzt aktualisieren
-      description: |
-        Aktualisiert die Daten eines bestehenden Arztes anhand seiner ID.
+      description: Aktualisiert die Daten eines bestehenden Arztes anhand seiner ID.
       operationId: modifyDoctor
       parameters:
         - name: id
@@ -368,15 +728,10 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-    # -------------------------------------------------------------------------
-    # DELETE /api/v1/doctor/{id} - EINEN Arzt löschen (nach ID)
-    # -------------------------------------------------------------------------
     delete:
-      tags:
-        - doctors
+      tags: [internal-doctors]
       summary: Einen Arzt löschen
-      description: |
-        Löscht einen Arzt aus dem System anhand seiner ID.
+      description: Löscht einen Arzt aus dem System anhand seiner ID.
       operationId: removeDoctor
       parameters:
         - name: id
@@ -396,38 +751,25 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-
   # ============================
-  # Working Hours
+  # Internal: Working Hours (CRUD)
   # ============================
-  /api/v1/doctors/{doctorId}/working-hours:
+  /api/v1/internal/doctors/{doctorId}/working-hours:
     post:
-      tags: [working-hours]
+      tags: [internal-working-hours]
       summary: Working Hours anlegen
-
       description: |
-          Erstellt neue Working Hours für einen Arzt.
-          - Beispiel: Arzt arbeitet Montag 08:00-12:00 und 14:00-18:00
-          → 2 Working Hours mit Lücke (Pause) dazwischen
+        Erstellt neue Working Hours für einen Arzt.
+        Slots werden automatisch für die nächsten 4 Wochen generiert.
 
-          📌 Beispiel für Working Hours mit Pause:
+        📌 Beispiel für Working Hours mit Pause:
+          // Vormittag
+          POST /api/v1/internal/doctors/123/working-hours
+          { "weekday": "MONDAY", "startTime": "08:00", "endTime": "12:00" }
 
-            // Vormittag
-            POST /api/v1/doctors/123/working-hours
-            {
-              "weekday": "MONDAY",
-              "startTime": "08:00",
-              "endTime": "12:00"  // Keine Pause!
-            }
-
-            // Nachmittag
-            POST /api/v1/doctors/123/working-hours
-            {
-              "weekday": "MONDAY",
-              "startTime": "14:00",
-              "endTime": "18:00"  // Keine Pause!
-            }
-
+          // Nachmittag
+          POST /api/v1/internal/doctors/123/working-hours
+          { "weekday": "MONDAY", "startTime": "14:00", "endTime": "18:00" }
       operationId: registerWorkingHours
       parameters:
         - $ref: '#/components/parameters/DoctorIdPath'
@@ -441,11 +783,7 @@ paths:
         '201':
           description: |
             Working Hours erfolgreich erstellt.
-
             ⚠️ AUTOMATISCH: Slots werden direkt generiert!
-            - Backend generiert automatisch Slots für die nächsten 4 Wochen
-            - Alle Slots haben Status = AVAILABLE
-            - Response enthält Working Hours + generierte Slots
           content:
             application/json:
               schema:
@@ -456,13 +794,7 @@ paths:
                     $ref: '#/components/schemas/WorkingHoursDto'
                   slots:
                     type: array
-                    description: |
-                      Automatisch generierte Slots für diese Working Hours.
-
-                      📌 Testprojekt - Auto-Generierung:
-                      - Slots für die nächsten 4 Wochen (ab heute)
-                      - Alle 30 Minuten
-                      - Status = AVAILABLE
+                    description: Automatisch generierte Slots (nächste 4 Wochen, alle 30 Min, Status=AVAILABLE)
                     items:
                       $ref: '#/components/schemas/SlotDto'
         '400':
@@ -475,7 +807,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
     get:
-      tags: [working-hours]
+      tags: [internal-working-hours]
       summary: Working Hours eines Arztes abrufen
       operationId: findWorkingHoursForDoctor
       parameters:
@@ -496,9 +828,9 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /api/v1/working-hours/{id}:
+  /api/v1/internal/working-hours/{id}:
     put:
-      tags: [working-hours]
+      tags: [internal-working-hours]
       summary: Working Hours aktualisieren
       operationId: modifyWorkingHours
       parameters:
@@ -526,7 +858,7 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
     delete:
-      tags: [working-hours]
+      tags: [internal-working-hours]
       summary: Working Hours löschen
       operationId: removeWorkingHours
       parameters:
@@ -542,27 +874,20 @@ paths:
           $ref: '#/components/responses/InternalServerError'
 
   # ============================
-  # Slots
+  # Internal: Slots (Admin-Verwaltung)
   # ============================
-  # 📌 Slots werden AUTOMATISCH beim Erstellen von Working Hours generiert!
-
-  /api/v1/slots:
+  /api/v1/internal/slots:
     get:
-      tags: [slots]
-      summary: Slots suchen
+      tags: [internal-slots]
+      summary: Slots suchen (Admin)
       description: |
-        Suche/Filter nach verschiedenen Kriterien.
+        Admin-Suche nach Slots mit verschiedenen Filtern.
+        Alle Filter sind OPTIONAL.
 
-        📌 Filter (alle OPTIONAL):
-        - doctorId: Slots eines bestimmten Arztes
-        - workingHoursId: Slots einer bestimmten Working Hour
-        - dateFrom + dateTo: Zeitraum filtern
-        - status: Nach Status filtern (AVAILABLE, BOOKED, BLOCKED)
-
-        💡 Beispiel-Requests:
-        - Patient: GET /api/v1/slots?doctorId={arzt-id}&dateFrom=2026-02-05&dateTo=2026-02-05&status=AVAILABLE
-        - Admin (alle Ärzte): GET /api/v1/slots?dateFrom=2026-02-05&dateTo=2026-02-05
-        - Working Hour: GET /api/v1/slots?workingHoursId={wh-id}
+        💡 Beispiele:
+        - GET /api/v1/internal/slots?doctorId={id}&status=BOOKED → Alle gebuchten Slots eines Arztes
+        - GET /api/v1/internal/slots?dateFrom=2026-03-01&dateTo=2026-03-31 → Alle Slots im März
+        - GET /api/v1/internal/slots?workingHoursId={id} → Slots einer Working Hour
       operationId: findSlots
       parameters:
         - $ref: '#/components/parameters/DoctorIdQuery'
@@ -596,9 +921,9 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /api/v1/slots/{id}:
+  /api/v1/internal/slots/{id}:
     get:
-      tags: [slots]
+      tags: [internal-slots]
       summary: Slot nach ID abrufen
       operationId: findSlotById
       parameters:
@@ -617,10 +942,13 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /api/v1/slots/{id}/block:
+  /api/v1/internal/slots/{id}/block:
     put:
-      tags: [slots]
-      summary: Slot blockieren
+      tags: [internal-slots]
+      summary: Slot blockieren (Admin)
+      description: |
+        Blockiert einen Slot administrativ (z.B. Arzt krank, Feiertag).
+        Setzt Status auf BLOCKED.
       operationId: blockSlot
       parameters:
         - $ref: '#/components/parameters/IdPath'
@@ -640,10 +968,13 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /api/v1/slots/{id}/unblock:
+  /api/v1/internal/slots/{id}/unblock:
     put:
-      tags: [slots]
-      summary: Slot freigeben
+      tags: [internal-slots]
+      summary: Slot freigeben (Admin)
+      description: |
+        Gibt einen blockierten Slot wieder frei.
+        Setzt Status zurück auf AVAILABLE.
       operationId: unblockSlot
       parameters:
         - $ref: '#/components/parameters/IdPath'
@@ -663,23 +994,13 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /api/v1/slots/{id}/book:
+  /api/v1/internal/slots/{id}/book:
     put:
-      tags: [slots]
-      summary: Slot buchen (Status auf BOOKED setzen)
+      tags: [internal-slots]
+      summary: Slot buchen (Admin – ohne patientId)
       description: |
-        Ändert den Status des Slots auf BOOKED.
-
-        ⚠️ Idempotent: Mehrfaches Aufrufen ist OK.
-
-        💡 Wird später vom Patient-Customer Service genutzt.
-
-        Validierungen:
-        - Slot muss AVAILABLE sein (sonst 409 Conflict)
-
-        📌 Konsistent mit /block und /unblock:
-        - Kein Request Body nötig (nur Status-Änderung)
-        - patientId kann später über separaten Endpoint gesetzt werden
+        Admin-Buchung: Setzt Slot-Status auf BOOKED.
+        Kein Request-Body nötig (kein Patient-Kontext).
       operationId: bookSlot
       parameters:
         - $ref: '#/components/parameters/IdPath'
@@ -695,7 +1016,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: Konflikt - Slot ist nicht verfügbar (bereits gebucht oder blockiert)
+          description: Konflikt – Slot ist nicht verfügbar
           content:
             application/json:
               schema:
@@ -703,6 +1024,10 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+
+# =============================================================================
+# 🧩 COMPONENTS
+# =============================================================================
 components:
   parameters:
     DoctorIdPath:
@@ -753,58 +1078,29 @@ components:
         maximum: 200
         default: 20
 
-    FromQuery:
-      name: from
-      in: query
-      description: Startdatum (ISO 8601)
-      required: false
-      schema:
-        type: string
-        format: date-time
-
-    ToQuery:
-      name: to
-      in: query
-      description: Enddatum (ISO 8601)
-      required: false
-      schema:
-        type: string
-        format: date-time
-
     DateFromQuery:
       name: dateFrom
       in: query
       description: |
         Startdatum für Zeitraum-Filter (OPTIONAL).
-        Format: YYYY-MM-DD (z.B. "2026-02-03")
-
-        Kann mit dateTo kombiniert werden für Zeitraum-Suche.
-
-        Beispiele:
-        - Nur dateFrom: Alle Slots ab diesem Datum
-        - dateFrom + dateTo: Alle Slots im Zeitraum (z.B. ganze Woche)
+        Format: YYYY-MM-DD
       required: false
       schema:
         type: string
         format: date
-      example: "2026-02-03"
+      example: "2026-03-01"
 
     DateToQuery:
       name: dateTo
       in: query
       description: |
         Enddatum für Zeitraum-Filter (OPTIONAL).
-        Format: YYYY-MM-DD (z.B. "2026-02-09")
-
-        Muss mit dateFrom kombiniert werden.
-
-        Beispiel: dateFrom=2026-02-03&dateTo=2026-02-09
-        → Alle Slots von Mo 03.02. bis So 09.02. (ganze Woche)
+        Format: YYYY-MM-DD
       required: false
       schema:
         type: string
         format: date
-      example: "2026-02-09"
+      example: "2026-03-31"
 
     CityIdQuery:
       name: cityId
@@ -885,8 +1181,7 @@ components:
     WorkingHoursIdQuery:
       name: workingHoursId
       in: query
-      description: |
-        Filter nach Working Hours ID.
+      description: Filter nach Working Hours ID
       required: false
       schema:
         type: string
@@ -923,66 +1218,42 @@ components:
 
 
   schemas:
-    # =============================================================================
-    # 📄 GENERIC PAGE RESPONSE - Wiederverwendbar für alle paginierten Endpoints
-    # =============================================================================
 
-    # -------------------------------------------------------------------------
-    # 📤 PageResponse - Generic Pagination Wrapper
-    # -------------------------------------------------------------------------
-    # Dieses generische Schema wird von allen paginierten GET-Endpoints verwendet.
-    # Es eliminiert redundante *PageResponse Schemas (CityPageResponse, DoctorPageResponse, etc.)
-    #
-    # Verwendung mit allOf:
-    #   allOf:
-    #     - $ref: '#/components/schemas/PageResponse'
-    #     - properties:
-    #         items:
-    #           type: array
-    #           items:
-    #             $ref: '#/components/schemas/XxxDto'
+    # =============================================================================
+    # 📄 GENERIC PAGE RESPONSE
+    # =============================================================================
     PageResponse:
       type: object
       required: [items, page, size, totalElements, totalPages]
       properties:
         items:
           type: array
-          description: |
-            Array von Elementen für die aktuelle Seite.
-            Der konkrete Typ wird pro Endpoint spezifiziert (z.B. CityDto, DoctorDto, etc.)
+          description: Array von Elementen für die aktuelle Seite
           items: {}
         page:
           type: integer
           minimum: 0
-          description: |
-            Aktuelle Seitennummer (0-basiert).
-            Erste Seite = 0, zweite Seite = 1, etc.
+          description: Aktuelle Seitennummer (0-basiert)
           example: 0
         size:
           type: integer
           minimum: 1
-          description: |
-            Anzahl der Elemente pro Seite.
-            Standard: 20 (konfigurierbar)
+          description: Anzahl der Elemente pro Seite
           example: 20
         totalElements:
           type: integer
           minimum: 0
-          description: |
-            Gesamtanzahl aller Elemente (über alle Seiten hinweg).
-            Beispiel: 150 Ärzte insgesamt
+          description: Gesamtanzahl aller Elemente
           example: 150
         totalPages:
           type: integer
           minimum: 0
-          description: |
-            Gesamtanzahl aller Seiten.
-            Berechnet als: ceil(totalElements / size)
+          description: Gesamtanzahl aller Seiten
           example: 8
 
-    # -------------------------------------------------------------------------
-    # 📤 CityDto - OUTPUT (Server → Client)
-    # -------------------------------------------------------------------------
+    # =============================================================================
+    # 🏙️ CITY SCHEMAS
+    # =============================================================================
     CityDto:
       type: object
       required: [id, name, postalCode]
@@ -990,39 +1261,27 @@ components:
         id:
           type: string
           format: uuid
-          description: |
-            📤 OUTPUT (IMMER vorhanden)
-            Eindeutige ID der Stadt (vom Server generiert).
+          description: Eindeutige ID der Stadt
           example: "550e8400-e29b-41d4-a716-446655440010"
         name:
           type: string
-          description: |
-            📤 OUTPUT (IMMER vorhanden)
-            Name der Stadt.
-            Wird für Filter-Suche verwendet (case-insensitive).
+          description: Name der Stadt
           minLength: 1
           maxLength: 100
           example: "Köln"
         postalCode:
           type: string
-          description: |
-            📤 OUTPUT (IMMER vorhanden)
-            Postleitzahl der Stadt.
-            Wird für Filter-Suche verwendet.
+          description: Postleitzahl der Stadt
           minLength: 1
           maxLength: 20
           example: "50667"
 
-
     # =============================================================================
-    # 🩺 SPECIALITY SCHEMAS - Master Data (Stammdaten)
+    # 🩺 SPECIALITY SCHEMAS
     # =============================================================================
-
     SpecialityType:
       type: string
-      description: |
-        Enum für alle verfügbaren Fachrichtungen.
-        Wird in SpecialityDto verwendet.
+      description: Enum für alle verfügbaren Fachrichtungen
       enum:
         - allgemeinmedizin
         - inneremedizin
@@ -1040,11 +1299,6 @@ components:
         - anästhesist
         - zahnarzt
 
-    # -------------------------------------------------------------------------
-    # 📤 SpecialityDto - OUTPUT (Server → Client)
-    # -------------------------------------------------------------------------
-    # Wird verwendet bei: GET /api/v1/specialities
-    # WICHTIG: Nur READ-ONLY (keine Create/Update Endpoints)
     SpecialityDto:
       type: object
       required: [id, name]
@@ -1052,23 +1306,21 @@ components:
         id:
           type: string
           format: uuid
-          description: Eindeutige ID der Fachrichtung (vom Server generiert)
+          description: Eindeutige ID der Fachrichtung
         name:
           $ref: '#/components/schemas/SpecialityType'
 
-    # -------------------------------------------------------------------------
-    # 📤 PracticeDto - OUTPUT (Server → Client)
-    # -------------------------------------------------------------------------
-
+    # =============================================================================
+    # 🏥 PRACTICE SCHEMAS
+    # =============================================================================
     PracticeDto:
       type: object
-      required: [id, name, email,phone,street,houseNumber,postalCode, cityId]
+      required: [id, name, email, phone, street, houseNumber, postalCode, cityId]
       properties:
         id:
           type: string
           format: uuid
-          description: |
-            Eindeutige ID der Praxis.
+          description: Eindeutige ID der Praxis
         name:
           type: string
           description: Name der Praxis
@@ -1093,14 +1345,6 @@ components:
           format: uuid
           description: ID der Stadt (Referenz zu CityDto)
 
-    # -------------------------------------------------------------------------
-    # 📥 CreatePracticeRequest - INPUT (Client → Server)
-    # -------------------------------------------------------------------------
-    # Wird verwendet bei: POST /api/v1/practices (Neue Praxis anlegen)
-    # Wird AUCH verwendet in: CreateDoctorRequest (nested)
-    #
-    # WICHTIG: Enthält KEINE `id` (wird vom Server generiert)
-    # WICHTIG: name, email, cityId sind PFLICHT
     CreatePracticeRequest:
       type: object
       required: [name, email, cityId, phone, street, houseNumber, postalCode]
@@ -1109,15 +1353,11 @@ components:
           type: string
           minLength: 5
           maxLength: 200
-          description: |
-            Name der Praxis.
-            Validierung: 5-200 Zeichen
+          description: Name der Praxis
         email:
           type: string
           format: email
-          description: |
-            Email-Adresse der Praxis.
-            Validierung: Muss gültige Email sein
+          description: Email-Adresse der Praxis
         phone:
           type: string
           description: Telefonnummer
@@ -1133,17 +1373,8 @@ components:
         cityId:
           type: string
           format: uuid
-          description: |
-            ID der Stadt (PFLICHT).
-            Referenz zu CityDto - Stadt muss existieren
+          description: ID der Stadt (PFLICHT)
 
-    # -------------------------------------------------------------------------
-    # 📥 UpdatePracticeRequest - INPUT (Client → Server)
-    # -------------------------------------------------------------------------
-    # Wird verwendet bei: PUT /api/v1/practices/{id} (Praxis aktualisieren)
-    #
-    # WICHTIG: ALLE Felder sind OPTIONAL (nur senden, was geändert werden soll)
-    # WICHTIG: Enthält KEINE `id` (kommt aus URL-Path!)
     UpdatePracticeRequest:
       type: object
       properties:
@@ -1151,11 +1382,11 @@ components:
           type: string
           minLength: 5
           maxLength: 200
-          description: Name der Praxis (OPTIONAL - nur senden, wenn geändert)
+          description: Name der Praxis (OPTIONAL)
         email:
           type: string
           format: email
-          description: Email-Adresse (OPTIONAL - nur senden, wenn geändert)
+          description: Email-Adresse (OPTIONAL)
         phone:
           type: string
           description: Telefonnummer (OPTIONAL)
@@ -1171,29 +1402,16 @@ components:
         cityId:
           type: string
           format: uuid
-          description: ID der Stadt (OPTIONAL - nur senden, wenn geändert)
-
+          description: ID der Stadt (OPTIONAL)
 
     # =============================================================================
-    # ⏰ WORKING HOURS SCHEMAS - Request, Response & DTOs
+    # ⏰ WORKING HOURS SCHEMAS
     # =============================================================================
-
     Weekday:
       type: string
-      description: |
-        Enum für Wochentage.
-        Wird in WorkingHoursDto und CreateWorkingHoursRequest verwendet.
+      description: Enum für Wochentage
       enum: [MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY]
 
-    # -------------------------------------------------------------------------
-    # 📤 WorkingHoursDto - OUTPUT (Server → Client)
-    # -------------------------------------------------------------------------
-    # Wird verwendet bei:
-    # - POST /api/v1/doctors/{doctorId}/working-hours → Response (201 Created)
-    # - GET /api/v1/doctors/{doctorId}/working-hours → Response Items
-    # - PUT /api/v1/working-hours/{id} → Response (200 OK)
-    #
-    # WICHTIG: Enthält IMMER eine `id` (vom Server generiert)
     WorkingHoursDto:
       type: object
       required: [id, doctorId, weekday, startTime, endTime]
@@ -1201,33 +1419,24 @@ components:
         id:
           type: string
           format: uuid
-          description: |
-            Eindeutige ID der Working Hours.
+          description: Eindeutige ID der Working Hours
         doctorId:
           type: string
           format: uuid
-          description: ID des Arztes (Referenz zu DoctorDto)
+          description: ID des Arztes
         weekday:
           $ref: '#/components/schemas/Weekday'
         startTime:
           type: string
           format: time
-          description: Startzeit (Format HH:mm)
+          description: "Startzeit (Format: HH:mm)"
           example: "09:00"
         endTime:
           type: string
           format: time
-          description: Endzeit (Format HH:mm)
+          description: "Endzeit (Format: HH:mm)"
           example: "17:00"
 
-    # -------------------------------------------------------------------------
-    # 📥 CreateWorkingHoursRequest - INPUT (Client → Server)
-    # -------------------------------------------------------------------------
-    # Wird verwendet bei: POST /api/v1/doctors/{doctorId}/working-hours
-    #
-    # WICHTIG: Enthält KEINE `id` (wird vom Server generiert)
-    # WICHTIG: Enthält KEINE `doctorId` (kommt aus URL-Path!)
-    # WICHTIG: weekday, startTime, endTime sind PFLICHT
     CreateWorkingHoursRequest:
       type: object
       required: [weekday, startTime, endTime]
@@ -1237,23 +1446,12 @@ components:
         startTime:
           type: string
           format: time
-          description: |
-            Startzeit (PFLICHT).
-            Format: HH:mm (z.B. "09:00")
+          description: "Startzeit (PFLICHT, Format: HH:mm)"
         endTime:
           type: string
           format: time
-          description: |
-            Endzeit (PFLICHT).
-            Format: HH:mm (z.B. "17:00")
-            Validierung: Muss nach startTime liegen
+          description: "Endzeit (PFLICHT, Format: HH:mm)"
 
-    # -------------------------------------------------------------------------
-    # 📥 UpdateWorkingHoursRequest - INPUT (Client → Server)
-    # -------------------------------------------------------------------------
-    # Wird verwendet bei: PUT /api/v1/working-hours/{id}
-    #
-    # WICHTIG: ALLE Felder sind OPTIONAL (nur senden, was geändert werden soll)
     UpdateWorkingHoursRequest:
       type: object
       properties:
@@ -1262,245 +1460,189 @@ components:
         startTime:
           type: string
           format: time
-          description: Startzeit (OPTIONAL - nur senden, wenn geändert)
+          description: Startzeit (OPTIONAL)
         endTime:
           type: string
           format: time
-          description: Endzeit (OPTIONAL - nur senden, wenn geändert)
+          description: Endzeit (OPTIONAL)
 
     # =============================================================================
-    # 📅 SLOT SCHEMAS - Request, Response & DTOs
+    # 📅 SLOT SCHEMAS
     # =============================================================================
-
     SlotStatus:
       type: string
       description: |
-        Enum für Slot-Status.
-
-        AVAILABLE = Verfügbar für Buchung (Standard bei Generierung)
-        BOOKED = Bereits von einem Patienten gebucht
-        BLOCKED = Administrativ blockiert (Sonderfälle--> Artz ist Krank oder Feiertage)
-
-        ℹ️ Hinweis zu BLOCKED:
-        - Wird NICHT automatisch bei Slot-Generierung gesetzt
-        - Nur für Sonderfälle: Krankheit, Meetings, Notfälle, etc.
-        - Admin kann Slots manuell über PUT /api/v1/slots/{id}/block sperren
-
-        📌 Bei Phase 1 (Split Working Hours):
-        - Pausen werden NICHT als BLOCKED-Slots gespeichert
-        - Pausen sind implizit (Lücken zwischen Working Hours)
-        - BLOCKED ist nur für ungeplante Blockierungen
+        AVAILABLE = Verfügbar für Buchung
+        BOOKED = Von einem Patienten gebucht
+        BLOCKED = Administrativ blockiert (Arzt krank, Feiertag etc.)
       enum: [AVAILABLE, BOOKED, BLOCKED]
 
-    # -------------------------------------------------------------------------
-    # 📤 SlotDto - OUTPUT (Server → Client)
-    # -------------------------------------------------------------------------
-    # Wird verwendet bei:
-    # - GET /api/v1/slots → Response Items (paginiert)
-    # - GET /api/v1/slots/{id} → Response (200 OK)
-    # - PUT /api/v1/slots/{id}/block → Response
-    # - PUT /api/v1/slots/{id}/unblock → Response
-    # - POST /api/v1/slots/{id}/book → Response
-    #
-    # WICHTIG: Enthält IMMER eine `id` (vom Server generiert)
     SlotDto:
       type: object
-      required: [id, workingHoursId, startTime, endTime, status]
+      required: [id, doctorId, workingHoursId, startTime, endTime, status]
       properties:
         id:
           type: string
           format: uuid
-          description: |
-            📤 OUTPUT (IMMER vorhanden)
-            Eindeutige ID des Slots.
-        workingHoursId:
+          description: Eindeutige ID des Slots
+        doctorId:
           type: string
           format: uuid
           description: |
-            📤 OUTPUT (IMMER vorhanden)
-            ID der Working Hours zu der dieser Slot gehört.
-            Um doctorId zu bekommen: GET /api/v1/working-hours/{workingHoursId}
+            ID des Arztes, zu dem dieser Slot gehört.
+            Direkt aufgelöst, damit der Customer-Service nicht extra Working-Hours abfragen muss.
+        workingHoursId:
+          type: string
+          format: uuid
+          description: ID der Working Hours zu der dieser Slot gehört
         startTime:
           type: string
           format: date-time
-          description: |
-            Startzeit des Slots (ISO 8601 Format).
-            Muss innerhalb der Working Hours liegen.
-            Beispiel: "2026-01-26T09:00:00Z"
+          description: "Startzeit (ISO 8601, z.B. 2026-03-15T09:00:00)"
         endTime:
           type: string
           format: date-time
-          description: |
-            Endzeit des Slots (ISO 8601 Format).
-            Muss innerhalb der Working Hours liegen.
-            Beispiel: "2026-01-26T09:30:00Z"
+          description: "Endzeit (ISO 8601, z.B. 2026-03-15T09:30:00)"
         status:
           $ref: '#/components/schemas/SlotStatus'
-
-    # -------------------------------------------------------------------------
-    # 📥 GenerateSlotsRequest - INPUT (Client → Server)
-    # -------------------------------------------------------------------------
-    # Wird verwendet bei:
-    # - POST /api/v1/doctors/{doctorId}/slots/generate (Bulk für alle Working Hours)
-    # - POST /api/v1/working-hours/{workingHoursId}/slots/generate (für eine Working Hour)
 
     GenerateSlotsRequest:
       type: object
       required: [startDate, endDate]
-      description: |
-        Request für Slot-Generierung.
-
-        📌 Testprojekt: Alle Slots sind IMMER 30 Minuten!
-        - Keine Konfiguration der Slot-Dauer nötig
-        - Backend generiert automatisch 30-Minuten-Slots
+      description: Request für Slot-Generierung (alle Slots = 30 Minuten)
       properties:
         startDate:
           type: string
           format: date
-          description: |
-            Startdatum für Slot-Generierung (PFLICHT).
-            Format: YYYY-MM-DD (z.B. "2026-02-03")
-
-            System generiert Slots ab diesem Datum.
+          description: Startdatum (PFLICHT, Format YYYY-MM-DD)
         endDate:
           type: string
           format: date
-          description: |
-            Enddatum für Slot-Generierung (PFLICHT).
-            Format: YYYY-MM-DD (z.B. "2026-02-28")
-
-            System generiert Slots bis zu diesem Datum (inklusive).
-
-            📌 Alle generierten Slots haben automatisch 30 Minuten Dauer.
-            Beispiel: Working Hour 09:00-12:00
-            → Slots: 09:00-09:30, 09:30-10:00, 10:00-10:30, 10:30-11:00, 11:00-11:30, 11:30-12:00
-
-
+          description: Enddatum (PFLICHT, Format YYYY-MM-DD)
 
     # =============================================================================
-    # 👨‍⚕️ DOCTOR SCHEMAS - Request, Response & DTOs
+    # 👨‍⚕️ DOCTOR SCHEMAS
     # =============================================================================
 
-    # -------------------------------------------------------------------------
-    # 📤 DoctorDto - OUTPUT (Server → Client)
-    # -------------------------------------------------------------------------
-    # Wird IMMER verwendet, wenn der Server Arzt-Daten ZURÜCKGIBT:
-    # - POST /api/v1/doctors → Response (201 Created)
-    # - GET /api/v1/doctors/{id} → Response (200 OK)
-    # - PUT /api/v1/doctors/{id} → Response (200 OK)
-    # - GET /api/v1/doctors → Response Items
-    #
-    # WICHTIG: Enthält IMMER eine `id` (vom Server generiert)
-    # WICHTIG: practiceId ist OPTIONAL (kann null sein, wenn noch nicht zugeordnet)
+    # --- Internal: DoctorDto (für Admin – mit IDs) ---
     DoctorDto:
       type: object
-      required:
-        - id              # ✅ IMMER vorhanden (Server generiert)
-        - firstName
-        - lastName
+      required: [id, firstName, lastName]
       properties:
         id:
           type: string
           format: uuid
-          description: |
-            Eindeutige ID des Arztes (vom Server generiert).
+          description: Eindeutige ID des Arztes
           example: "550e8400-e29b-41d4-a716-446655440000"
         firstName:
           type: string
-          description: |
-            Vorname des Arztes
+          description: Vorname des Arztes
           example: "Hans"
         lastName:
           type: string
-          description: |
-            📤 OUTPUT (IMMER vorhanden)
-            Nachname des Arztes
+          description: Nachname des Arztes
           example: "Müller"
         practiceId:
           type: string
           format: uuid
-          description: |
-            📤 OUTPUT (OPTIONAL - kann null sein)
-            ID der Praxis, in der der Arzt arbeitet.
-            Ist null, wenn der Arzt noch keiner Praxis zugeordnet wurde.
+          description: ID der Praxis (kann null sein)
           nullable: true
           example: "550e8400-e29b-41d4-a716-446655440001"
         specialityIds:
           type: array
-          description: |
-            📤 OUTPUT (IMMER vorhanden, aber kann leer sein)
-            Liste der Fachrichtungs-IDs des Arztes.
-            Ist ein leeres Array [], wenn noch keine Fachrichtungen zugeordnet wurden.
+          description: Liste der Fachrichtungs-IDs
           items:
             type: string
             format: uuid
           example: ["550e8400-e29b-41d4-a716-446655440002"]
 
-    # -------------------------------------------------------------------------
-    # 📥 CreateDoctorRequest - INPUT (Client → Server)
-    # -------------------------------------------------------------------------
-    # Wird verwendet bei: POST /api/v1/doctors (Neuen Arzt anlegen)
-    #
-    # BUSINESS LOGIK:
-    # 1. Admin legt neuen Arzt an → firstName + lastName PFLICHT
-    # 2. Praxis-Zuordnung ist OPTIONAL (kann später per Update hinzugefügt werden)
-    # 3. Fachrichtungen sind OPTIONAL (können später hinzugefügt werden)
-    # 4. Arbeitszeiten werden separat über POST /api/v1/doctors/{doctorId}/working-hours hinzugefügt
-    #
-    # WICHTIG: Enthält KEINE `id` (wird vom Server generiert)
-    # WICHTIG: ALLE Felder außer firstName + lastName sind OPTIONAL
+    # --- External: DoctorWithPracticeDto (für Customer – mit aufgelösten Praxis-Daten) ---
+    DoctorWithPracticeDto:
+      type: object
+      required: [id, firstName, lastName, specialities]
+      description: |
+        Arzt-DTO für externe Suche mit aufgelösten Praxis- und Fachrichtungs-Daten.
+        Der Customer sieht direkt den Praxisnamen, Adresse und Fachrichtungen –
+        ohne extra Requests für Praxis/Speciality-Details.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Eindeutige ID des Arztes
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        firstName:
+          type: string
+          description: Vorname des Arztes
+          example: "Hans"
+        lastName:
+          type: string
+          description: Nachname des Arztes
+          example: "Müller"
+        specialities:
+          type: array
+          description: Liste der Fachrichtungen (aufgelöst mit Namen)
+          items:
+            $ref: '#/components/schemas/SpecialityDto'
+        practiceName:
+          type: string
+          description: Name der Praxis (kann null sein)
+          nullable: true
+          example: "Praxis am Dom"
+        practiceStreet:
+          type: string
+          description: Straße der Praxis
+          nullable: true
+          example: "Domstraße"
+        practiceHouseNumber:
+          type: string
+          description: Hausnummer der Praxis
+          nullable: true
+          example: "12"
+        practicePostalCode:
+          type: string
+          description: Postleitzahl der Praxis
+          nullable: true
+          example: "50667"
+        practiceCity:
+          type: string
+          description: Stadt der Praxis (aufgelöster Name)
+          nullable: true
+          example: "Köln"
+        practicePhone:
+          type: string
+          description: Telefonnummer der Praxis
+          nullable: true
+          example: "+49 221 1234567"
+
     CreateDoctorRequest:
       type: object
-      required:
-        - firstName
-        - lastName
+      required: [firstName, lastName]
       properties:
         firstName:
           type: string
           minLength: 5
           maxLength: 100
-          description: |
-            Vorname des Arztes.
-            Validierung: 2-100 Zeichen
+          description: Vorname des Arztes
           example: "Hans"
         lastName:
           type: string
           minLength: 5
           maxLength: 100
-          description: |
-            Nachname des Arztes.
-            Validierung: 2-100 Zeichen
+          description: Nachname des Arztes
           example: "Müller"
         practiceId:
           type: string
           format: uuid
-          description: |
-            📥 INPUT (OPTIONAL)
-            ID einer existierenden Praxis.
+          description: ID einer existierenden Praxis (OPTIONAL)
           example: "550e8400-e29b-41d4-a716-446655440001"
         specialityIds:
           type: array
-          description: |
-            📥 INPUT (OPTIONAL)
-            Liste der Fachrichtungs-IDs.
+          description: Liste der Fachrichtungs-IDs (OPTIONAL)
           items:
             type: string
             format: uuid
           example: ["550e8400-e29b-41d4-a716-446655440002"]
 
-    # -------------------------------------------------------------------------
-    # 📥 UpdateDoctorRequest - INPUT (Client → Server)
-    # -------------------------------------------------------------------------
-    # Wird verwendet bei: PUT /api/v1/doctors/{doctorId} (Arzt aktualisieren)
-    #
-    # BUSINESS LOGIK:
-    # 1. Admin kann nachträglich Praxis-Zuordnung hinzufügen (practiceId)
-    # 2. Admin kann Fachrichtungen hinzufügen/ändern (specialityIds)
-    # 3. Admin kann Namen aktualisieren (firstName, lastName)
-    #
-    # WICHTIG: ALLE Felder sind OPTIONAL (nur senden, was geändert werden soll)
-    # WICHTIG: Enthält KEINE `id` (kommt aus URL-Path!)
-    # WICHTIG: Kein `practice`-Object (nur `practiceId`)
     UpdateDoctorRequest:
       type: object
       properties:
@@ -1508,87 +1650,126 @@ components:
           type: string
           minLength: 5
           maxLength: 100
-          description: |
-            📥 INPUT (OPTIONAL)
-            Vorname des Arztes - nur senden, wenn geändert werden soll.
-            Validierung: 2-100 Zeichen
+          description: Vorname (OPTIONAL)
         lastName:
           type: string
           minLength: 5
           maxLength: 100
-          description: |
-            📥 INPUT (OPTIONAL)
-            Nachname des Arztes - nur senden, wenn geändert werden soll.
-            Validierung: 2-100 Zeichen
+          description: Nachname (OPTIONAL)
         practiceId:
           type: string
           format: uuid
-          description: |
-            📥 INPUT (OPTIONAL)
-            ID der Praxis, in der der Arzt arbeitet.
-            Wird verwendet, um nachträglich eine Praxis-Zuordnung hinzuzufügen oder zu ändern.
+          description: ID der Praxis (OPTIONAL)
         specialityIds:
           type: array
           description: |
-            📥 INPUT (OPTIONAL)
-            Liste der Fachrichtungs-IDs (vollständig ersetzen).
-            ⚠️ WICHTIG: Alle gewünschten Fachrichtungen müssen gesendet werden (nicht nur neue hinzufügen).
+            Fachrichtungs-IDs (OPTIONAL, vollständig ersetzen).
+            ⚠️ Alle gewünschten IDs senden, nicht nur neue.
           items:
             type: string
             format: uuid
 
     # =============================================================================
-    # ❌ ERROR RESPONSE - Fehlerbehandlung
+    # 🎫 BOOKING SCHEMAS – External (Customer-Szenarien B, C, D)
     # =============================================================================
-    #
-    # Wird IMMER verwendet, wenn etwas schief geht:
-    # - 400 Bad Request (Validierungsfehler)
-    # - 404 Not Found (Ressource nicht gefunden)
-    # - 409 Conflict (z.B. Arzt existiert bereits)
-    # - 500 Internal Server Error (Unerwarteter Fehler)
-    #
-    # Wird automatisch von Spring Boot generiert (mit @ControllerAdvice)
+
+    # --- Szenario B: Termin buchen ---
+    BookSlotRequest:
+      type: object
+      required: [patientId]
+      description: |
+        Request zum Buchen eines Slots.
+        Wird vom Customer-Service gesendet mit der Patient-ID.
+      properties:
+        patientId:
+          type: string
+          format: uuid
+          description: |
+            ID des Patienten, der den Termin bucht.
+            Wird vom Customer-Service mitgesendet.
+          example: "660e8400-e29b-41d4-a716-446655440099"
+
+    # --- Szenario C: Termin absagen ---
+    CancelSlotRequest:
+      type: object
+      required: [patientId]
+      description: |
+        Request zum Stornieren eines gebuchten Slots.
+        patientId wird zur Verifikation verwendet.
+      properties:
+        patientId:
+          type: string
+          format: uuid
+          description: |
+            ID des Patienten, der den Termin absagt.
+            Muss mit dem Patienten des gebuchten Slots übereinstimmen.
+          example: "660e8400-e29b-41d4-a716-446655440099"
+
+    # --- Szenario D: Termin verschieben ---
+    RescheduleSlotRequest:
+      type: object
+      required: [patientId, currentSlotId, newSlotId]
+      description: |
+        Request zum Verschieben eines Termins.
+        Atomar: Alter Slot → AVAILABLE, Neuer Slot → BOOKED.
+      properties:
+        patientId:
+          type: string
+          format: uuid
+          description: ID des Patienten
+          example: "660e8400-e29b-41d4-a716-446655440099"
+        currentSlotId:
+          type: string
+          format: uuid
+          description: |
+            ID des aktuell gebuchten Slots (wird auf AVAILABLE gesetzt).
+            Muss Status BOOKED haben.
+          example: "770e8400-e29b-41d4-a716-446655440001"
+        newSlotId:
+          type: string
+          format: uuid
+          description: |
+            ID des neuen gewünschten Slots (wird auf BOOKED gesetzt).
+            Muss Status AVAILABLE haben.
+          example: "770e8400-e29b-41d4-a716-446655440002"
+
+    RescheduleResponse:
+      type: object
+      required: [cancelledSlot, bookedSlot]
+      description: |
+        Response nach erfolgreicher Terminverschiebung.
+        Enthält beide Slots mit ihren aktualisierten Status.
+      properties:
+        cancelledSlot:
+          $ref: '#/components/schemas/SlotDto'
+        bookedSlot:
+          $ref: '#/components/schemas/SlotDto'
+
+    # =============================================================================
+    # ❌ ERROR RESPONSE
+    # =============================================================================
     ErrorResponse:
       type: object
-      required:
-        - timestamp
-        - status
-        - error
-        - message
-        - path
+      required: [timestamp, status, error, message, path]
       properties:
         timestamp:
           type: string
           format: date-time
-          description: |
-            Zeitpunkt des Fehlers (ISO 8601 Format).
-            Wird automatisch vom Server generiert.
+          description: Zeitpunkt des Fehlers
           example: "2026-01-26T15:30:00Z"
         status:
           type: integer
-          description: |
-            HTTP Status Code.
-            400 = Bad Request (Validierung)
-            404 = Not Found (nicht gefunden)
-            409 = Conflict (Konflikt)
-            500 = Internal Server Error
+          description: HTTP Status Code
           example: 400
         error:
           type: string
-          description: |
-            Fehlertyp (kurze Beschreibung).
-            Wird von Spring Boot generiert.
+          description: Fehlertyp
           example: "Bad Request"
         message:
           type: string
-          description: |
-            Detaillierte Fehlermeldung.
-            Erklärt, was genau schief gelaufen ist.
+          description: Detaillierte Fehlermeldung
           example: "firstName darf nicht leer sein"
         path:
           type: string
-          description: |
-            Anfrage-Pfad (welcher Endpoint den Fehler verursacht hat).
-            Wird automatisch vom Server gesetzt.
-          example: "/api/v1/doctors"
-
+          description: Anfrage-Pfad
+          example: "/api/v1/internal/doctors"

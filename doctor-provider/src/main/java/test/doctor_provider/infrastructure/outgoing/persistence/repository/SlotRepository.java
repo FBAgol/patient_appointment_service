@@ -1,5 +1,8 @@
 package test.doctor_provider.infrastructure.outgoing.persistence.repository;
 
+import java.time.LocalDate;
+import java.util.UUID;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,9 +12,6 @@ import org.springframework.stereotype.Repository;
 
 import test.doctor_provider.domain.enums.SlotStatus;
 import test.doctor_provider.infrastructure.outgoing.persistence.entity.SlotEntity;
-
-import java.time.LocalDate;
-import java.util.UUID;
 
 @Repository
 public interface SlotRepository extends JpaRepository<SlotEntity, UUID> {
@@ -29,9 +29,9 @@ public interface SlotRepository extends JpaRepository<SlotEntity, UUID> {
 			  AND (:dateTo IS NULL OR CAST(s.startTime AS LocalDate) <= :dateTo)
 			  AND (:status IS NULL OR s.status = :status)
 			""")
-	Page<SlotEntity> findAllFiltered(@Param("doctorId") UUID doctorId,
-			@Param("workingHoursId") UUID workingHoursId, @Param("dateFrom") LocalDate dateFrom,
-			@Param("dateTo") LocalDate dateTo, @Param("status") SlotStatus status, Pageable pageable);
+	Page<SlotEntity> findAllFiltered(@Param("doctorId") UUID doctorId, @Param("workingHoursId") UUID workingHoursId,
+			@Param("dateFrom") LocalDate dateFrom, @Param("dateTo") LocalDate dateTo,
+			@Param("status") SlotStatus status, Pageable pageable);
 
 	void deleteAllByWorkingHoursId(UUID workingHoursId);
 

@@ -12,15 +12,16 @@ import lombok.NoArgsConstructor;
 /**
  * Ein konkreter Termin-Slot für einen Arzt. Wird aus den doctor_working_hours
  * generiert.
- *
- * Beziehung: - Slot → WorkingHours (FK: working_hours_id) - EINZIGE direkte
- * Beziehung
- *
- * Um die doctorId zu bekommen: SELECT wh.doctor_id FROM slot s JOIN
- * working_hours wh ON s.working_hours_id = wh.id
- *
- * ⚠️ Design-Entscheidung: Normalisiert (keine Redundanz) - Kein doctor_id in
- * slot-Tabelle - Doctor wird über working_hours ermittelt (JOIN)
+ * <p>
+ * Beziehung: Slot → WorkingHours (FK: working_hours_id) - EINZIGE direkte Beziehung
+ * <p>
+ * Um die doctorId zu bekommen:
+ * SELECT wh.doctor_id FROM slot s JOIN working_hours wh ON s.working_hours_id = wh.id
+ * <p>
+ * ⚠️ Design-Entscheidung: Normalisiert (keine Redundanz)
+ * - Kein doctor_id in slot-Tabelle
+ * - Doctor wird über working_hours ermittelt (JOIN)
+ * - doctorId im SlotDto wird in der Web-Schicht (Mapper/Adapter) aufgelöst
  */
 @Data
 @AllArgsConstructor

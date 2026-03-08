@@ -8,21 +8,16 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Manuelle Flyway-Konfiguration.
- * Stellt sicher, dass Flyway die Migrationen ausführt,
- * BEVOR Hibernate/JPA die Tabellen nutzt.
+ * Manuelle Flyway-Konfiguration. Stellt sicher, dass Flyway die Migrationen
+ * ausführt, BEVOR Hibernate/JPA die Tabellen nutzt.
  */
 @Configuration
 public class FlywayConfig {
 
 	@Bean
 	public Flyway flyway(DataSource dataSource) {
-		Flyway flyway = Flyway.configure()
-				.dataSource(dataSource)
-				.locations("classpath:db/migration")
-				.baselineOnMigrate(true)
-				.encoding("UTF-8")
-				.load();
+		Flyway flyway = Flyway.configure().dataSource(dataSource).locations("classpath:db/migration")
+				.baselineOnMigrate(true).encoding("UTF-8").load();
 		flyway.migrate();
 		return flyway;
 	}
@@ -39,5 +34,3 @@ public class FlywayConfig {
 		};
 	}
 }
-
-

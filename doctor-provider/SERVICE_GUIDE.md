@@ -39,12 +39,12 @@ Controller
 
 ## 2. Klassisch vs. Hexagonal
 
-| Aspekt | Klassisch | Hexagonal (dein Projekt) |
-|---|---|---|
-| Service kennt | Repository direkt | nur OutgoingPort (Interface) |
-| Wer ruft den Service? | Controller direkt | Controller über IncomingPort (Interface) |
-| Annotations | `@Service` | `@Service` (gleich!) |
-| Austauschbar? | Schwer (fest verdrahtet) | Leicht (Interfaces tauschen) |
+|        Aspekt         |        Klassisch         |         Hexagonal (dein Projekt)         |
+|-----------------------|--------------------------|------------------------------------------|
+| Service kennt         | Repository direkt        | nur OutgoingPort (Interface)             |
+| Wer ruft den Service? | Controller direkt        | Controller über IncomingPort (Interface) |
+| Annotations           | `@Service`               | `@Service` (gleich!)                     |
+| Austauschbar?         | Schwer (fest verdrahtet) | Leicht (Interfaces tauschen)             |
 
 ```
 Klassisch:   Controller → Service → Repository → DB
@@ -76,12 +76,12 @@ public class ItemService { ... }
 - `@Component`, `@Service`, `@Repository`, `@Controller` machen technisch das Gleiche (Bean registrieren)
 - Aber sie zeigen dem Leser die **Rolle** der Klasse:
 
-| Annotation | Rolle | Schicht |
-|---|---|---|
-| `@Controller` / `@RestController` | Empfängt HTTP-Requests | Web/Infrastruktur |
-| `@Service` | Business-Logik | Application/Domain |
-| `@Repository` | Datenbank-Zugriff | Infrastruktur |
-| `@Component` | Allgemein (wenn nichts anderes passt) | Beliebig |
+|            Annotation             |                 Rolle                 |      Schicht       |
+|-----------------------------------|---------------------------------------|--------------------|
+| `@Controller` / `@RestController` | Empfängt HTTP-Requests                | Web/Infrastruktur  |
+| `@Service`                        | Business-Logik                        | Application/Domain |
+| `@Repository`                     | Datenbank-Zugriff                     | Infrastruktur      |
+| `@Component`                      | Allgemein (wenn nichts anderes passt) | Beliebig           |
 
 **Ohne `@Service`:** Spring kennt die Klasse nicht → kann sie nicht injizieren → `No beans of type found`!
 
@@ -136,13 +136,13 @@ public Item create(Item item) {
 
 **Wann brauchst du `@Transactional`?**
 
-| Situation | `@Transactional` nötig? |
-|---|---|
-| Nur lesen (findAll, findById) | ❌ Nicht nötig (aber schadet nicht) |
-| Ein einzelnes `save()` | ⚠️ Optional (JPA macht das intern schon) |
+|             Situation             |          `@Transactional` nötig?          |
+|-----------------------------------|-------------------------------------------|
+| Nur lesen (findAll, findById)     | ❌ Nicht nötig (aber schadet nicht)        |
+| Ein einzelnes `save()`            | ⚠️ Optional (JPA macht das intern schon)  |
 | Mehrere `save()` in einer Methode | ✅ Ja! Sonst wird nur ein Teil gespeichert |
-| Lesen + Schreiben gemischt | ✅ Ja! |
-| Validierung + Speichern zusammen | ✅ Ja! |
+| Lesen + Schreiben gemischt        | ✅ Ja!                                     |
+| Validierung + Speichern zusammen  | ✅ Ja!                                     |
 
 **`@Transactional` auf Klasse vs. Methode:**
 
@@ -184,12 +184,12 @@ Der Service ist der **richtige Ort** für Business-Validierungen. Der Controller
 
 **Typische Validierungen:**
 
-| Was? | Beispiel | Exception |
-|---|---|---|
-| Existenz prüfen | "Gibt es die City mit dieser ID?" | `NotFoundException` |
-| Duplikat prüfen | "Gibt es schon eine Praxis mit diesem Namen?" | `ConflictException` |
-| Business-Regel | "Ist der Slot AVAILABLE (nicht BLOCKED)?" | `BusinessRuleException` |
-| Referenz prüfen | "Gehört die workingHoursId zu diesem Doctor?" | `BadRequestException` |
+|      Was?       |                   Beispiel                    |        Exception        |
+|-----------------|-----------------------------------------------|-------------------------|
+| Existenz prüfen | "Gibt es die City mit dieser ID?"             | `NotFoundException`     |
+| Duplikat prüfen | "Gibt es schon eine Praxis mit diesem Namen?" | `ConflictException`     |
+| Business-Regel  | "Ist der Slot AVAILABLE (nicht BLOCKED)?"     | `BusinessRuleException` |
+| Referenz prüfen | "Gehört die workingHoursId zu diesem Doctor?" | `BadRequestException`   |
 
 **Exceptions werfen – wie?**
 
@@ -284,6 +284,7 @@ public class ItemService {
 ```
 
 **Datenfluss:**
+
 ```
 Controller → Service → Repository → DB
 ```
@@ -388,20 +389,21 @@ public class ItemService implements ItemIncomingPort {
 ```
 
 **Datenfluss:**
+
 ```
 Controller → IncomingPort → Service → OutgoingPort → Adapter → Repository → DB
 ```
 
 ### 5.3 Unterschiede auf einen Blick
 
-| | Klassisch | Hexagonal |
-|---|---|---|
-| **Klasse** | `class ItemService` | `class ItemService implements ItemIncomingPort` |
-| **Abhängigkeit** | `ItemRepository` (konkret) | `ItemOutgoingPort` (Interface) |
-| **Methoden** | Eigene Methoden | `@Override` vom IncomingPort |
-| **Controller ruft** | `service.create(item)` | `port.create(item)` (selbes Interface) |
-| **Testbar?** | Repository mocken | OutgoingPort mocken (einfacher!) |
-| **Wann nutzen?** | Kleine/einfache Projekte | Größere Projekte, Microservices |
+|                     |         Klassisch          |                    Hexagonal                    |
+|---------------------|----------------------------|-------------------------------------------------|
+| **Klasse**          | `class ItemService`        | `class ItemService implements ItemIncomingPort` |
+| **Abhängigkeit**    | `ItemRepository` (konkret) | `ItemOutgoingPort` (Interface)                  |
+| **Methoden**        | Eigene Methoden            | `@Override` vom IncomingPort                    |
+| **Controller ruft** | `service.create(item)`     | `port.create(item)` (selbes Interface)          |
+| **Testbar?**        | Repository mocken          | OutgoingPort mocken (einfacher!)                |
+| **Wann nutzen?**    | Kleine/einfache Projekte   | Größere Projekte, Microservices                 |
 
 ---
 
@@ -508,14 +510,14 @@ public Item update(UUID id, Item item) {
 
 ## 9. Übersicht aller Services in deinem Projekt
 
-| Service | Implementiert (IncomingPort) | Nutzt (OutgoingPorts) |
-|---|---|---|
-| `CityService` | `CityIncomingPort` | `CityOutgoingPort` |
-| `SpecialityService` | `SpecialityIncomingPort` | `SpecialityOutgoingPort` |
-| `PracticeService` | `PracticeIncomingPort` | `PracticeOutgoingPort`, `CityOutgoingPort` |
-| `DoctorService` | `DoctorIncomingPort` | `DoctorOutgoingPort`, `PracticeOutgoingPort`, `SpecialityOutgoingPort` |
-| `WorkingHoursService` | `WorkingHoursIncomingPort` | `WorkingHoursOutgoingPort`, `DoctorOutgoingPort` |
-| `SlotService` | `SlotIncomingPort` | `SlotOutgoingPort`, `WorkingHoursOutgoingPort` |
+|        Service        | Implementiert (IncomingPort) |                         Nutzt (OutgoingPorts)                          |
+|-----------------------|------------------------------|------------------------------------------------------------------------|
+| `CityService`         | `CityIncomingPort`           | `CityOutgoingPort`                                                     |
+| `SpecialityService`   | `SpecialityIncomingPort`     | `SpecialityOutgoingPort`                                               |
+| `PracticeService`     | `PracticeIncomingPort`       | `PracticeOutgoingPort`, `CityOutgoingPort`                             |
+| `DoctorService`       | `DoctorIncomingPort`         | `DoctorOutgoingPort`, `PracticeOutgoingPort`, `SpecialityOutgoingPort` |
+| `WorkingHoursService` | `WorkingHoursIncomingPort`   | `WorkingHoursOutgoingPort`, `DoctorOutgoingPort`                       |
+| `SlotService`         | `SlotIncomingPort`           | `SlotOutgoingPort`, `WorkingHoursOutgoingPort`                         |
 
 **Warum nutzen manche Services MEHRERE OutgoingPorts?**
 - `PracticeService` braucht `CityOutgoingPort` → um zu prüfen ob die `cityId` existiert
@@ -527,6 +529,7 @@ public Item update(UUID id, Item item) {
 ## 10. Zusammenfassung der Regeln
 
 **Für beide Ansätze:**
+
 ```
 ┌──────────────────────────────────────────────────────────────────┐
 │ REGEL 1: @Service auf der Klasse                                 │
@@ -539,6 +542,7 @@ public Item update(UUID id, Item item) {
 ```
 
 **Zusätzlich bei Klassisch:**
+
 ```
 ┌──────────────────────────────────────────────────────────────────┐
 │ REGEL K1: Repositories direkt injizieren                         │
@@ -547,6 +551,7 @@ public Item update(UUID id, Item item) {
 ```
 
 **Zusätzlich bei Hexagonal (dein Projekt):**
+
 ```
 ┌──────────────────────────────────────────────────────────────────┐
 │ REGEL H1: implements XxxIncomingPort                             │

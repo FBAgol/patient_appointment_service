@@ -78,8 +78,8 @@ public interface PracticeOutgoingPort {
 	/**
 	 * Prüft, ob eine Praxis mit dem gegebenen Namen bereits existiert.
 	 *
-	 * Verwendung: - Unique-Constraint-Prüfung bei POST /api/v1/practice -
-	 * Konflikt-Prüfung bei PUT /api/v1/practice/{id} - Verhindert Duplikate (409
+	 * Verwendung: - Unique-Constraint-Prüfung bei POST /api/v1/internal/practice -
+	 * Konflikt-Prüfung bei PUT /api/v1/internal/practice/{id} - Verhindert Duplikate (409
 	 * Conflict)
 	 *
 	 * @param name

@@ -629,7 +629,6 @@ Falls du Google Java Format bevorzugst:
 1. Eclipse Formatter XML erstellen:
    - In Eclipse: `Preferences` → `Java` → `Code Style` → `Formatter`
    - `Export...` → `eclipse-formatter.xml` speichern
-
 2. In `pom.xml` referenzieren:
 
 ```xml
@@ -659,12 +658,12 @@ Falls du Google Java Format bevorzugst:
 
 ### **Status:**
 
-|           Status           |             Wert             |
-|----------------------------|------------------------------|
-| **Spotless installiert?**  | ✅ Ja (in pom.xml)            |
-| **Formatter**              | ✅ Eclipse (Java 25 kompatibel) |
-| **Funktioniert?**          | ✅ Ja                         |
-| **Git Hook?**              | ⏸️ Optional (siehe andere Datei) |
+|          Status           |               Wert               |
+|---------------------------|----------------------------------|
+| **Spotless installiert?** | ✅ Ja (in pom.xml)                |
+| **Formatter**             | ✅ Eclipse (Java 25 kompatibel)   |
+| **Funktioniert?**         | ✅ Ja                             |
+| **Git Hook?**             | ⏸️ Optional (siehe andere Datei) |
 
 ---
 

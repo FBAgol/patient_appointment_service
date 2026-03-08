@@ -18,7 +18,7 @@ public interface SlotIncomingPort {
 	 * Gibt alle Slots zurück, optional gefiltert nach Suchkriterien. Alle
 	 * Filter-Parameter sind optional.
 	 *
-	 * Entspricht: GET /api/v1/slots (operationId: findSlots)
+	 * Entspricht: GET /api/v1/internal/slots (operationId: findSlots)
 	 *
 	 * @param doctorId
 	 *            Filter nach Arzt-ID
@@ -42,7 +42,7 @@ public interface SlotIncomingPort {
 	/**
 	 * Gibt einen spezifischen Slot anhand seiner ID zurück.
 	 *
-	 * Entspricht: GET /api/v1/slots/{id} (operationId: findSlotById)
+	 * Entspricht: GET /api/v1/internal/slots/{id} (operationId: findSlotById)
 	 *
 	 * @param id
 	 *            UUID des Slots
@@ -53,7 +53,7 @@ public interface SlotIncomingPort {
 	/**
 	 * Blockiert einen Slot (setzt Status auf BLOCKED).
 	 *
-	 * Entspricht: PUT /api/v1/slots/{id}/block (operationId: blockSlot)
+	 * Entspricht: PUT /api/v1/internal/slots/{id}/block (operationId: blockSlot)
 	 *
 	 * @param id
 	 *            UUID des zu blockierenden Slots
@@ -64,7 +64,7 @@ public interface SlotIncomingPort {
 	/**
 	 * Gibt einen blockierten Slot frei (setzt Status auf AVAILABLE).
 	 *
-	 * Entspricht: PUT /api/v1/slots/{id}/unblock (operationId: unblockSlot)
+	 * Entspricht: PUT /api/v1/internal/slots/{id}/unblock (operationId: unblockSlot)
 	 *
 	 * @param id
 	 *            UUID des freizugebenden Slots
@@ -75,7 +75,7 @@ public interface SlotIncomingPort {
 	/**
 	 * Bucht einen Slot (setzt Status auf BOOKED).
 	 *
-	 * Entspricht: PUT /api/v1/slots/{id}/book (operationId: bookSlot)
+	 * Entspricht: PUT /api/v1/internal/slots/{id}/book (operationId: bookSlot)
 	 *
 	 * @param id
 	 *            UUID des zu buchenden Slots

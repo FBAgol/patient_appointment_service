@@ -22,6 +22,7 @@
 Ein Git Pre-Commit Hook ermöglicht **automatische Code-Formatierung** bei jedem Commit.
 
 ### **Wichtig:**
+
 - ✅ Der Hook ist **NUR für dieses Projekt** (`doctor-provider`)
 - ✅ **Andere** Java-Projekte sind **NICHT betroffen**
 - ✅ **Keine globale** Git-Konfiguration
@@ -53,6 +54,7 @@ Ein Git Pre-Commit Hook ermöglicht **automatische Code-Formatierung** bei jedem
 - Klicke unten auf **Terminal** (oder `Alt + F12`)
 
 **Oder in macOS Terminal:**
+
 ```bash
 cd /Users/A200151230/Documents/myProjcts/patient_appointment_service/doctor-provider
 ```
@@ -67,6 +69,7 @@ chmod +x setup-git-hooks.sh
 ```
 
 **Alternative (falls aktiviere-git-hook.sh vorhanden):**
+
 ```bash
 chmod +x aktiviere-git-hook.sh
 ./aktiviere-git-hook.sh
@@ -291,6 +294,7 @@ ls: .git/hooks/pre-commit: No such file or directory
 ```
 
 **Lösung:** Setup-Script ausführen:
+
 ```bash
 ./setup-git-hooks.sh
 ```
@@ -361,6 +365,7 @@ Bitte Fehler beheben und erneut committen.
 2. Erneut committen
 
 **Notfall (Hook überspringen):**
+
 ```bash
 git commit --no-verify -m "message"
 ```
@@ -511,6 +516,7 @@ cd doctor-provider
 ### **Alternative:** `husky` (npm) für automatisches Setup
 
 Für JavaScript/TypeScript-Projekte:
+
 ```bash
 npm install --save-dev husky
 ```

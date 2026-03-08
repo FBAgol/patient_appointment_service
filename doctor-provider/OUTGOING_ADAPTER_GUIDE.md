@@ -27,12 +27,12 @@ Service
 
 ### Es gibt verschiedene Arten von Outgoing Adaptern:
 
-| Art | Spricht mit... | Beispiel |
-|---|---|---|
-| **PersistenceAdapter** | Datenbank (PostgreSQL, MySQL, ...) | `CityPersistenceAdapter` |
-| **RestClientAdapter** | Anderer Microservice (HTTP) | `PatientServiceAdapter` |
-| **EmailAdapter** | E-Mail-Server (SMTP) | `EmailNotificationAdapter` |
-| **MessageAdapter** | Message Broker (Kafka, RabbitMQ) | `KafkaNotificationAdapter` |
+|          Art           |           Spricht mit...           |          Beispiel          |
+|------------------------|------------------------------------|----------------------------|
+| **PersistenceAdapter** | Datenbank (PostgreSQL, MySQL, ...) | `CityPersistenceAdapter`   |
+| **RestClientAdapter**  | Anderer Microservice (HTTP)        | `PatientServiceAdapter`    |
+| **EmailAdapter**       | E-Mail-Server (SMTP)               | `EmailNotificationAdapter` |
+| **MessageAdapter**     | Message Broker (Kafka, RabbitMQ)   | `KafkaNotificationAdapter` |
 
 **Alle** haben das gleiche Prinzip:
 - Sie implementieren ein **OutgoingPort** (Interface)
@@ -43,13 +43,13 @@ Service
 
 ## 2. Klassisch vs. Hexagonal
 
-| Aspekt | Klassisch | Hexagonal |
-|---|---|---|
-| Service kennt | Repository / RestTemplate **direkt** | nur OutgoingPort (Interface) |
-| Annotation | `@Repository` / `@Component` | `@Component` |
-| Austauschbar? | Schwer (fest verdrahtet) | Leicht (Interface tauschen) |
-| Wo liegt der Code? | `repository/` Ordner | `infrastructure/outgoing/` Ordner |
-| Mapper nötig? | Nein (Entity = Domain oft gleich) | Ja (Entity ≠ Domain, strikt getrennt) |
+|       Aspekt       |              Klassisch               |               Hexagonal               |
+|--------------------|--------------------------------------|---------------------------------------|
+| Service kennt      | Repository / RestTemplate **direkt** | nur OutgoingPort (Interface)          |
+| Annotation         | `@Repository` / `@Component`         | `@Component`                          |
+| Austauschbar?      | Schwer (fest verdrahtet)             | Leicht (Interface tauschen)           |
+| Wo liegt der Code? | `repository/` Ordner                 | `infrastructure/outgoing/` Ordner     |
+| Mapper nötig?      | Nein (Entity = Domain oft gleich)    | Ja (Entity ≠ Domain, strikt getrennt) |
 
 ```
 Klassisch:
@@ -81,19 +81,19 @@ public class CityPersistenceAdapter implements CityOutgoingPort { ... }
 - Spring scannt beim Start alle `@Component`-Klassen und registriert sie
 - Danach kann die Klasse überall per **Dependency Injection** verwendet werden
 - Im Service steht `private final CityOutgoingPort port` → Spring sucht automatisch
-  eine Bean, die `CityOutgoingPort` implementiert → findet `CityPersistenceAdapter`
+eine Bean, die `CityOutgoingPort` implementiert → findet `CityPersistenceAdapter`
 
 **Warum `@Component` und nicht `@Repository` oder `@Service`?**
 - `@Component`, `@Service`, `@Repository`, `@Controller` machen **technisch das Gleiche**
-  (alle registrieren eine Spring Bean)
+(alle registrieren eine Spring Bean)
 - Aber sie zeigen dem Leser die **Rolle** der Klasse:
 
-| Annotation | Rolle | Verwendung |
-|---|---|---|
-| `@Component` | Allgemeine Komponente | Adapter (Hexagonal) |
-| `@Service` | Business-Logik | Service-Klassen |
-| `@Repository` | Datenzugriff | JPA Repositories (klassisch) |
-| `@Controller` | Web-Eingangspunkt | Controller |
+|  Annotation   |         Rolle         |          Verwendung          |
+|---------------|-----------------------|------------------------------|
+| `@Component`  | Allgemeine Komponente | Adapter (Hexagonal)          |
+| `@Service`    | Business-Logik        | Service-Klassen              |
+| `@Repository` | Datenzugriff          | JPA Repositories (klassisch) |
+| `@Controller` | Web-Eingangspunkt     | Controller                   |
 
 - Der PersistenceAdapter ist **kein Repository** (er benutzt ein Repository, aber er IST keins)
 - Er ist auch **kein Service** (er hat keine Business-Logik)
@@ -135,7 +135,7 @@ public Page<City> findAll(...) { ... }
 - Sagt dem Compiler: „Diese Methode kommt aus dem Interface (OutgoingPort)"
 - Wenn du die Methodensignatur falsch schreibst → **Compile-Error** (Sicherheit!)
 - Ohne `@Override`: Wenn du dich vertippst, erstellt Java einfach eine **neue Methode**
-  und die Port-Methode bleibt unimplementiert → Fehler erst zur Laufzeit
+und die Port-Methode bleibt unimplementiert → Fehler erst zur Laufzeit
 
 ---
 
@@ -439,14 +439,14 @@ public class PatientRestClientAdapter implements PatientOutgoingPort {
 
 ### Vergleich: PersistenceAdapter vs. RestClientAdapter
 
-| Aspekt | PersistenceAdapter | RestClientAdapter |
-|---|---|---|
-| Spricht mit | Datenbank | Anderer Microservice |
-| Benutzt intern | `JpaRepository` | `RestClient` |
-| Konvertiert | Entity ↔ Domain | Response-DTO ↔ Domain |
-| Annotation | `@Component` | `@Component` |
-| Implementiert | OutgoingPort | OutgoingPort |
-| Konfiguration | `application.properties` (DB-URL) | `application.properties` (Service-URL) |
+|     Aspekt     |        PersistenceAdapter         |           RestClientAdapter            |
+|----------------|-----------------------------------|----------------------------------------|
+| Spricht mit    | Datenbank                         | Anderer Microservice                   |
+| Benutzt intern | `JpaRepository`                   | `RestClient`                           |
+| Konvertiert    | Entity ↔ Domain                   | Response-DTO ↔ Domain                  |
+| Annotation     | `@Component`                      | `@Component`                           |
+| Implementiert  | OutgoingPort                      | OutgoingPort                           |
+| Konfiguration  | `application.properties` (DB-URL) | `application.properties` (Service-URL) |
 
 **Das Muster ist IMMER gleich:**
 1. Implementiere das OutgoingPort-Interface
@@ -472,12 +472,12 @@ services.notification.url=http://localhost:8082
 
 ## 7. Zusammenfassung – Wann verwende ich was?
 
-| Situation | Adapter-Typ | Intern |
-|---|---|---|
+|             Situation              |    Adapter-Typ     |            Intern            |
+|------------------------------------|--------------------|------------------------------|
 | Daten in meiner DB lesen/schreiben | PersistenceAdapter | JpaRepository + EntityMapper |
-| Daten von anderem Service holen | RestClientAdapter | RestClient + RestMapper |
-| E-Mail senden | EmailAdapter | JavaMailSender |
-| Nachricht an Kafka senden | KafkaAdapter | KafkaTemplate |
+| Daten von anderem Service holen    | RestClientAdapter  | RestClient + RestMapper      |
+| E-Mail senden                      | EmailAdapter       | JavaMailSender               |
+| Nachricht an Kafka senden          | KafkaAdapter       | KafkaTemplate                |
 
 **Alle** folgen dem gleichen Prinzip:
 

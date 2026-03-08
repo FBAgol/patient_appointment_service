@@ -1,30 +1,31 @@
 package test.doctor_provider.infrastructure.incomming.web.mapper;
 
+import java.util.List;
+import java.util.UUID;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.openapitools.jackson.nullable.JsonNullable;
+
 import test.doctor_provider.api.model.CreateDoctorRequest;
 import test.doctor_provider.api.model.DoctorDto;
 import test.doctor_provider.api.model.UpdateDoctorRequest;
 import test.doctor_provider.domain.model.Doctor;
 
-import java.util.List;
-import java.util.UUID;
-
 @Mapper(componentModel = "spring")
 public interface DoctorWebMapper {
 
-  // für Get und Post Dto
+	// für Get und Post Dto
 	DoctorDto toDto(Doctor doctor);
 
-  // für Get alle Ärzte (Liste)
+	// für Get alle Ärzte (Liste)
 	List<DoctorDto> toDto(List<Doctor> doctors);
 
-  // für Post
+	// für Post
 	@Mapping(target = "id", ignore = true)
 	Doctor toDomain(CreateDoctorRequest request);
 
-    // für Put
+	// für Put
 	@Mapping(source = "id", target = "id")
 	Doctor toDomain(UUID id, UpdateDoctorRequest request);
 
@@ -42,4 +43,3 @@ public interface DoctorWebMapper {
 		return value.get();
 	}
 }
-

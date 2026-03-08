@@ -46,7 +46,7 @@ public interface SpecialityOutgoingPort {
 	 * werden soll.
 	 *
 	 * Verwendung: - Validierung bei Doctor.specialityIds - Validierung bei Filtern
-	 * (z.B. GET /api/v1/doctors?specialityId=...)
+	 * (z.B. GET /api/v1/internal/doctors?specialityId=...)
 	 *
 	 * @param id
 	 *            UUID der Fachrichtung
