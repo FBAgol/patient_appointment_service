@@ -71,15 +71,4 @@ public interface SlotIncomingPort {
 	 * @return Aktualisierter Slot mit Status AVAILABLE
 	 */
 	Slot updateUnBlockSlotById(UUID id);
-
-	/**
-	 * Bucht einen Slot (setzt Status auf BOOKED).
-	 *
-	 * Entspricht: PUT /api/v1/internal/slots/{id}/book (operationId: bookSlot)
-	 *
-	 * @param id
-	 *            UUID des zu buchenden Slots
-	 * @return Aktualisierter Slot mit Status BOOKED
-	 */
-	Slot updateBookSlotById(UUID id);
 }

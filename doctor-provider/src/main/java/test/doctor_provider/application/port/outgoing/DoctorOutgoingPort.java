@@ -4,6 +4,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import test.doctor_provider.domain.model.Doctor;
+import test.doctor_provider.domain.model.DoctorSearchCriteria;
 import test.doctor_provider.domain.model.Page;
 
 public interface DoctorOutgoingPort {
@@ -14,24 +15,15 @@ public interface DoctorOutgoingPort {
 	 * ⚠️ cityId-Filter: Benötigt JOIN zu practice Tabelle SELECT d.* FROM doctor d
 	 * JOIN practice p ON d.practice_id = p.id WHERE p.city_id = ?
 	 *
-	 * @param firstName
-	 *            Filter nach Vorname (Teilstring-Suche, case-insensitive)
-	 * @param lastName
-	 *            Filter nach Nachname (Teilstring-Suche, case-insensitive)
-	 * @param practiceId
-	 *            Filter nach Praxis-ID
-	 * @param cityId
-	 *            Filter nach Stadt-ID (benötigt JOIN zu practice)
-	 * @param specialityId
-	 *            Filter nach Fachrichtung-ID (benötigt JOIN zu doctor_speciality)
+	 * @param criteria
+	 *            Suchkriterien (alle Felder optional, null = nicht filtern)
 	 * @param page
 	 *            Seitennummer (0-basiert)
 	 * @param size
 	 *            Anzahl der Elemente pro Seite
 	 * @return Paginierte Liste von Ärzten
 	 */
-	Page<Doctor> findAll(Optional<String> firstName, Optional<String> lastName, Optional<UUID> practiceId,
-			Optional<UUID> cityId, Optional<UUID> specialityId, int page, int size);
+	Page<Doctor> findAll(DoctorSearchCriteria criteria, int page, int size);
 
 	/**
 	 * Sucht einen Arzt anhand seiner ID.

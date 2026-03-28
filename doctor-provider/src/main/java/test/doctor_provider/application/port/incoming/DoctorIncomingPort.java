@@ -1,9 +1,9 @@
 package test.doctor_provider.application.port.incoming;
 
-import java.util.Optional;
 import java.util.UUID;
 
 import test.doctor_provider.domain.model.Doctor;
+import test.doctor_provider.domain.model.DoctorSearchCriteria;
 import test.doctor_provider.domain.model.Page;
 
 /**
@@ -17,29 +17,20 @@ import test.doctor_provider.domain.model.Page;
 public interface DoctorIncomingPort {
 
 	/**
-	 * Gibt alle Ärzte zurück, optional gefiltert nach Suchkriterien. Alle
-	 * Filter-Parameter sind optional.
+	 * Gibt alle Ärzte zurück, optional gefiltert nach Suchkriterien.
 	 *
-	 * Entspricht: GET /api/v1/internal/doctors (operationId: findAllDoctors)
+	 * Entspricht: GET /api/v1/internal/doctors und GET
+	 * /api/v1/external/doctors
 	 *
-	 * @param firstName
-	 *            Filter nach Vorname (Teilstring-Suche, case-insensitive)
-	 * @param lastName
-	 *            Filter nach Nachname (Teilstring-Suche, case-insensitive)
-	 * @param practiceId
-	 *            Filter nach Praxis-ID
-	 * @param cityId
-	 *            Filter nach Stadt-ID
-	 * @param specialityId
-	 *            Filter nach Fachrichtung-ID
+	 * @param criteria
+	 *            Suchkriterien (alle Felder optional, null = nicht filtern)
 	 * @param page
 	 *            Seitennummer (0-basiert)
 	 * @param size
 	 *            Anzahl der Elemente pro Seite
 	 * @return Paginierte Liste von Ärzten
 	 */
-	Page<Doctor> findAllDoctors(Optional<String> firstName, Optional<String> lastName, Optional<UUID> practiceId,
-			Optional<UUID> cityId, Optional<UUID> specialityId, int page, int size);
+	Page<Doctor> findAllDoctors(DoctorSearchCriteria criteria, int page, int size);
 
 	/**
 	 * Erstellt einen neuen Arzt im System.

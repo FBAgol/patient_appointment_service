@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class CityPersistenceAdapter implements CityOutgoingPort {
+public class SearchPersistenceAdapter implements CityOutgoingPort {
 
 	private final CityRepository cityRepository;
 	private final CityEntityMapper cityEntityMapper;

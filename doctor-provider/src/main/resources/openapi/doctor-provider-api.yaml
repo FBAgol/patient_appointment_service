@@ -30,10 +30,6 @@ servers:
 # =============================================================================
 tags:
   # --- Internal (Admin) Tags ---
-  - name: internal-cities
-    description: "🔒 INTERNAL – Stammdaten: Städte verwalten"
-  - name: internal-specialities
-    description: "🔒 INTERNAL – Stammdaten: Fachrichtungen verwalten"
   - name: internal-practices
     description: "🔒 INTERNAL – Praxen verwalten (CRUD)"
   - name: internal-doctors
@@ -435,77 +431,6 @@ paths:
   # 🔒 INTERNAL ENDPOINTS – für Admin
   # ###########################################################################
 
-  # ============================
-  # Internal: Cities (Stammdaten)
-  # ============================
-  /api/v1/internal/cities:
-    get:
-      tags: [internal-cities]
-      summary: Alle Städte abrufen
-      description: |
-        Gibt eine paginierte Liste aller Städte zurück.
-        Optional: Filter nach Name oder PLZ (Teilstring-Suche, case-insensitive).
-      operationId: findAllCities
-      parameters:
-        - name: name
-          in: query
-          description: Filter nach Stadt-Name (Teilstring-Suche, case-insensitive)
-          required: false
-          schema:
-            type: string
-            minLength: 1
-            maxLength: 100
-          example: "Köln"
-        - name: postalCode
-          in: query
-          description: Filter nach Postleitzahl
-          required: false
-          schema:
-            type: string
-            minLength: 1
-            maxLength: 20
-          example: "50667"
-        - $ref: '#/components/parameters/PageQuery'
-        - $ref: '#/components/parameters/SizeQuery'
-      responses:
-        '200':
-          description: Städte erfolgreich abgerufen (paginiert)
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/PageResponse'
-                  - type: object
-                    properties:
-                      items:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/CityDto'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  # ============================
-  # Internal: Specialities (Stammdaten)
-  # ============================
-  /api/v1/internal/specialities:
-    get:
-      tags: [internal-specialities]
-      summary: Alle Fachrichtungen abrufen
-      description: Gibt eine Liste aller Fachrichtungen zurück.
-      operationId: findAllSpecialities
-      responses:
-        '200':
-          description: Erfolgreich
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SpecialityDto'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
 
   # ============================
   # Internal: Practices (CRUD)
@@ -994,35 +919,6 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
-  /api/v1/internal/slots/{id}/book:
-    put:
-      tags: [internal-slots]
-      summary: Slot buchen (Admin – ohne patientId)
-      description: |
-        Admin-Buchung: Setzt Slot-Status auf BOOKED.
-        Kein Request-Body nötig (kein Patient-Kontext).
-      operationId: bookSlot
-      parameters:
-        - $ref: '#/components/parameters/IdPath'
-      responses:
-        '200':
-          description: Slot erfolgreich gebucht (Status = BOOKED)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SlotDto'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          description: Konflikt – Slot ist nicht verfügbar
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
 
 
 # =============================================================================
@@ -1034,15 +930,6 @@ components:
       name: doctorId
       in: path
       description: ID des Arztes
-      required: true
-      schema:
-        type: string
-        format: uuid
-
-    SpecialityIdPath:
-      name: specialityId
-      in: path
-      description: ID der Fachrichtung
       required: true
       schema:
         type: string
@@ -1168,15 +1055,6 @@ components:
         minLength: 1
         maxLength: 200
 
-    CityNameQuery:
-      name: cityName
-      in: query
-      description: Filter nach Stadt-Name (Teilstring-Suche, case-insensitive)
-      required: false
-      schema:
-        type: string
-        minLength: 1
-        maxLength: 100
 
     WorkingHoursIdQuery:
       name: workingHoursId
@@ -1506,19 +1384,6 @@ components:
         status:
           $ref: '#/components/schemas/SlotStatus'
 
-    GenerateSlotsRequest:
-      type: object
-      required: [startDate, endDate]
-      description: Request für Slot-Generierung (alle Slots = 30 Minuten)
-      properties:
-        startDate:
-          type: string
-          format: date
-          description: Startdatum (PFLICHT, Format YYYY-MM-DD)
-        endDate:
-          type: string
-          format: date
-          description: Enddatum (PFLICHT, Format YYYY-MM-DD)
 
     # =============================================================================
     # 👨‍⚕️ DOCTOR SCHEMAS
